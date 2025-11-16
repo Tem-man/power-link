@@ -1,0 +1,22 @@
+{
+    "extends": "@vue/tsconfig/tsconfig.dom.json",
+    "compilerOptions": {
+        "declaration": true,
+        "declarationMap": false,
+        "outDir": "./dist",
+        "rootDir": "utils",
+        "types": [
+            "vite/client"
+        ],
+        "allowImportingTsExtensions": false,
+        "verbatimModuleSyntax": false
+    },
+    "include": [
+        "utils/**/*",
+        "env.d.ts"
+    ],
+    "exclude": [
+        "node_modules",
+        "dist"
+    ]
+}

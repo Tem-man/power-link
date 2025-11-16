@@ -1,0 +1,43 @@
+{
+  "name": "node-link-utils",
+  "version": "1.0.1",
+  "description": "A pure JavaScript visual node connector for creating draggable connections between nodes. Framework-agnostic and easy to use",
+  "type": "module",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "images"
+  ],
+  "keywords": [
+    "connector",
+    "node-link",
+    "visual-connector",
+    "drag-line",
+    "bezier-curve"
+  ],
+  "author": "",
+  "license": "MIT",
+  "scripts": {
+    "build": "rollup -c utils/rollup.config.js"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.25.2",
+    "@babel/preset-env": "^7.25.3",
+    "@rollup/plugin-babel": "^6.0.4",
+    "@rollup/plugin-commonjs": "^28.0.0",
+    "@rollup/plugin-node-resolve": "^15.3.0",
+    "@rollup/plugin-terser": "^0.4.4",
+    "rollup": "^4.23.0",
+    "rollup-plugin-postcss": "^4.0.2",
+    "rollup-plugin-typescript2": "^0.36.0",
+    "rollup-plugin-vue": "^6.0.0",
+    "typescript": "~5.9.3"
+  }
+}
