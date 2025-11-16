@@ -7,6 +7,15 @@ A pure JavaScript visual node connector for creating draggable connections betwe
 
 ![Node Link Connector Demo](https://github.com/Tem-man/node-link-utils/blob/main/packages/images/screen-shot.png)
 
+### 📹 Demo Video
+
+<video width="100%" controls>
+  <source src="https://github.com/Tem-man/node-link-utils/raw/main/packages/images/video.mp4" type="video/mp4">
+  Your browser does not support the video tag.
+</video>
+
+**Watch the demo video** to see node-link-utils in action! [Download video](https://github.com/Tem-man/node-link-utils/raw/main/packages/images/video.mp4)
+
 ## ✨ Features
 
 - 🎯 **Visual Node Connections** - Create beautiful bezier curve connections between nodes
