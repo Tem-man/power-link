@@ -1,7 +1,7 @@
-# node-link-connector
+# node-link-utils
 
-[![npm version](https://img.shields.io/npm/v/node-link-connector.svg)](https://www.npmjs.com/package/node-link-connector)
-[![license](https://img.shields.io/npm/l/node-link-connector.svg)](https://github.com/your-username/node-link-connector/blob/main/LICENSE)
+[![npm version](https://img.shields.io/npm/v/node-link-utils.svg)](https://www.npmjs.com/package/node-link-utils)
+[![license](https://img.shields.io/npm/l/node-link-utils.svg)](https://github.com/your-username/node-link-utils/blob/main/LICENSE)
 
 A pure JavaScript visual node connector for creating draggable connections between nodes. Framework-agnostic and easy to use.
 
@@ -22,19 +22,19 @@ A pure JavaScript visual node connector for creating draggable connections betwe
 ## 📦 Installation
 
 ```bash
-npm install node-link-connector
+npm install node-link-utils
 ```
 
 Or using yarn:
 
 ```bash
-yarn add node-link-connector
+yarn add node-link-utils
 ```
 
 Or using pnpm:
 
 ```bash
-pnpm add node-link-connector
+pnpm add node-link-utils
 ```
 
 ## 🚀 Quick Start
@@ -42,7 +42,7 @@ pnpm add node-link-connector
 ### Basic Usage
 
 ```javascript
-import Connector from "node-link-connector";
+import Connector from "node-link-utils";
 
 // 1. Get container element
 const container = document.getElementById("connector-container");
@@ -252,7 +252,7 @@ connector.destroy();
 
 <script setup>
   import { ref, onMounted, onBeforeUnmount } from "vue";
-  import Connector from "node-link-connector";
+  import Connector from "node-link-utils";
 
   const containerRef = ref(null);
   const node1Ref = ref(null);
@@ -309,7 +309,7 @@ connector.destroy();
 
 ```jsx
 import { useEffect, useRef } from "react";
-import Connector from "node-link-connector";
+import Connector from "node-link-utils";
 
 function App() {
   const containerRef = useRef(null);
@@ -408,7 +408,7 @@ function App() {
     </div>
 
     <script type="module">
-      import Connector from "node-link-connector";
+      import Connector from "node-link-utils";
 
       const connector = new Connector({
         container: document.getElementById("container"),
@@ -511,4 +511,4 @@ Give a ⭐️ if this project helped you!
 
 ---
 
-Made with ❤️ by the node-link-connector team
+Made with ❤️ by the node-link-utils team

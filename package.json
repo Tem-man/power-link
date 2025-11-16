@@ -11,6 +11,7 @@
     "build:node-link": "pnpm --dir packages build"
   },
   "dependencies": {
+    "node-link-utils": "^1.0.3",
     "vue": "^3.5.22"
   },
   "devDependencies": {

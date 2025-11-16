@@ -74,7 +74,8 @@
 <script setup>
   import { ref, onMounted, onBeforeUnmount } from "vue";
   // import Connector from "@/utils/connector/Connector.js";
-  import Connector from "@node-link";
+  // import Connector from "@node-link";
+  import Connector from "node-link-utils";
 
   const containerRef = ref(null);
   const node1Ref = ref(null);
