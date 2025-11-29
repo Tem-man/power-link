@@ -8,9 +8,9 @@ importers:
 
   .:
     dependencies:
-      node-link-utils:
-        specifier: ^1.0.3
-        version: 1.0.3
+      power-link:
+        specifier: ^0.0.6
+        version: 0.0.6
       vue:
         specifier: ^3.5.22
         version: 3.5.22(typescript@5.9.3)
@@ -1435,9 +1435,6 @@ packages:
   node-addon-api@7.1.1:
     resolution: {integrity: sha512-5m3bsyrjFWE1xf7nz7YXdN4udnVtXK6/Yfgn5qnahL6bCkf2yKt4k3nuTKAtT4r3IG8JNR2ncsIMdZuAzJjHQQ==}
 
-  node-link-utils@1.0.3:
-    resolution: {integrity: sha512-TfbV0Ydxn7IJ//BRLpOqmpj3ld1NbwFslTwa/ucQx7FwQ5x5o/fhUZt/dlvLZ2F/2lbYq040ZHZJhlpC9KtZyQ==}
-
   node-releases@2.0.27:
     resolution: {integrity: sha512-nmh3lCkYZ3grZvqcCH+fjmQ7X+H0OeZgP40OierEaAptX4XofMh5kwNbWh7lBduUzCcV/8kZ+NDLCwm2iorIlA==}
 
@@ -1717,6 +1714,9 @@ packages:
   postcss@8.5.6:
     resolution: {integrity: sha512-3Ybi1tAuwAP9s0r1UQ2J4n5Y0G05bJkpUIO0/bI9MhwmD70S5aTWbXGBwxHrelT+XM1k6dM0pk+SwNkpTRN7Pg==}
     engines: {node: ^10 || ^12 || >=14}
+
+  power-link@0.0.6:
+    resolution: {integrity: sha512-lM4sHxdN8xZIC1Td44iLX8HmOACX9SG0qPiMh0YyZU7qoZGaAHrmUj7FsyKtJMc0ffxVyEo6/qWb+navPYl7hw==}
 
   promise.series@0.2.0:
     resolution: {integrity: sha512-VWQJyU2bcDTgZw8kpfBpB/ejZASlCrzwz5f2hjb/zlujOEB4oeiAhHygAWq8ubsX2GVkD4kCU5V2dwOTaCY5EQ==}
@@ -3512,8 +3512,6 @@ snapshots:
   node-addon-api@7.1.1:
     optional: true
 
-  node-link-utils@1.0.3: {}
-
   node-releases@2.0.27: {}
 
   normalize-url@6.1.0: {}
@@ -3766,6 +3764,8 @@ snapshots:
       nanoid: 3.3.11
       picocolors: 1.1.1
       source-map-js: 1.2.1
+
+  power-link@0.0.6: {}
 
   promise.series@0.2.0: {}
 

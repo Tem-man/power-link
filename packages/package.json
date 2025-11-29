@@ -1,6 +1,6 @@
 {
   "name": "power-link",
-  "version": "0.0.4",
+  "version": "0.0.7",
   "description": "A pure JavaScript visual node connector for creating draggable connections between nodes. Framework-agnostic and easy to use",
   "type": "module",
   "main": "dist/index.js",
@@ -12,13 +12,13 @@
   },
   "files": [
     "dist",
-    "README.md",
-    "images"
+    "README.md"
   ],
   "publishConfig": {
     "access": "public"
   },
   "keywords": [
+    "power-link",
     "connector",
     "node-link",
     "visual-connector",

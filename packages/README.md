@@ -74,7 +74,7 @@ const connector = new Connector({
 
   onDisconnect: (connection) => {
     console.log("Connection removed:", connection);
-  },
+  }
 });
 
 // 3. Register nodes
@@ -82,20 +82,33 @@ const node1 = document.getElementById("node1");
 const node2 = document.getElementById("node2");
 
 connector.registerNode("node1", node1, {
-  dotPositions: ["right"], // Only right connection dot
+  dotPositions: ["right"] // Only right connection dot
 });
 
 connector.registerNode("node2", node2, {
-  dotPositions: ["left", "right"], // Both left and right dots
+  dotPositions: ["left", "right"] // Both left and right dots
 });
 ```
 
 ### HTML Structure
 
 ```html
-<div id="connector-container" style="position: relative; height: 600px;">
-  <div id="node1" style="position: absolute; left: 100px; top: 100px;">Node 1</div>
-  <div id="node2" style="position: absolute; left: 400px; top: 100px;">Node 2</div>
+<div
+  id="connector-container"
+  style="position: relative; height: 600px;"
+>
+  <div
+    id="node1"
+    style="position: absolute; left: 100px; top: 100px;"
+  >
+    Node 1
+  </div>
+  <div
+    id="node2"
+    style="position: absolute; left: 400px; top: 100px;"
+  >
+    Node 2
+  </div>
 </div>
 ```
 
@@ -133,6 +146,7 @@ Register a node for connection.
     - `['left', 'right']`: Array format, both sides
     - `['left']`: Only left dot
     - `['right']`: Only right dot
+  - `info` (Object): Node extraneous information
 
 **Returns:** Node object
 
@@ -141,6 +155,11 @@ Register a node for connection.
 ```javascript
 connector.registerNode("myNode", element, {
   dotPositions: ["right"],
+  info: {
+    id: "123",
+    name: "apple",
+    desc: "this is a red apple"
+  }
 });
 ```
 
@@ -221,15 +240,49 @@ Destroy the connector and clean up all resources.
 connector.destroy();
 ```
 
+#### `setViewState(scale,translateX,translateY)`
+
+Set the initial view state
+
+**Parameters:**
+
+- `scale` (Number): set initial view scale
+- `translateX` (Number): set initial view x-axis translation
+- `translateY` (Number): set initial view y-axis translation
+
+**Example:**
+
+````javascript
+ connector.setViewState({
+      scale: 0.8,
+      translateX: 50,
+      translateY: 30
+    })
+```
+
+
 ## 🎨 Usage Examples
 
 ### Vue 3
 
 ```vue
 <template>
-  <div class="container" ref="containerRef">
-    <div class="node" ref="node1Ref">Node 1</div>
-    <div class="node" ref="node2Ref">Node 2</div>
+  <div
+    class="container"
+    ref="containerRef"
+  >
+    <div
+      class="node"
+      ref="node1Ref"
+    >
+      Node 1
+    </div>
+    <div
+      class="node"
+      ref="node2Ref"
+    >
+      Node 2
+    </div>
   </div>
 </template>
 
@@ -251,15 +304,25 @@ connector.destroy();
       },
       onDisconnect: (connection) => {
         console.log("Connection removed:", connection);
-      },
+      }
     });
 
     connector.registerNode("node1", node1Ref.value, {
       dotPositions: ["right"],
+      info: {
+        id: "123",
+        name: "apple",
+        desc: "this is a red apple"
+      }
     });
 
     connector.registerNode("node2", node2Ref.value, {
       dotPositions: ["left"],
+      info: {
+        id: "456",
+        name: "pear",
+        desc: "this is a yellow pear"
+      }
     });
   });
 
@@ -286,7 +349,7 @@ connector.destroy();
     cursor: move;
   }
 </style>
-```
+````
 
 ### React
 
@@ -310,15 +373,25 @@ function App() {
       },
       onDisconnect: (connection) => {
         console.log("Connection removed:", connection);
-      },
+      }
     });
 
     connectorRef.current.registerNode("node1", node1Ref.current, {
       dotPositions: ["right"],
+      info: {
+        id: "123",
+        name: "apple",
+        desc: "this is a red apple"
+      }
     });
 
     connectorRef.current.registerNode("node2", node2Ref.current, {
       dotPositions: ["left"],
+      info: {
+        id: "456",
+        name: "pear",
+        desc: "this is a yellow pear"
+      }
     });
 
     return () => {
@@ -329,11 +402,20 @@ function App() {
   }, []);
 
   return (
-    <div ref={containerRef} style={{ position: "relative", height: "600px" }}>
-      <div ref={node1Ref} style={{ position: "absolute", left: "100px", top: "100px" }}>
+    <div
+      ref={containerRef}
+      style={{ position: "relative", height: "600px" }}
+    >
+      <div
+        ref={node1Ref}
+        style={{ position: "absolute", left: "100px", top: "100px" }}
+      >
         Node 1
       </div>
-      <div ref={node2Ref} style={{ position: "absolute", left: "400px", top: "100px" }}>
+      <div
+        ref={node2Ref}
+        style={{ position: "absolute", left: "400px", top: "100px" }}
+      >
         Node 2
       </div>
     </div>
@@ -365,8 +447,20 @@ function App() {
   </head>
   <body>
     <div id="container">
-      <div id="node1" class="node" style="left: 100px; top: 100px;">Node 1</div>
-      <div id="node2" class="node" style="left: 400px; top: 100px;">Node 2</div>
+      <div
+        id="node1"
+        class="node"
+        style="left: 100px; top: 100px;"
+      >
+        Node 1
+      </div>
+      <div
+        id="node2"
+        class="node"
+        style="left: 400px; top: 100px;"
+      >
+        Node 2
+      </div>
     </div>
 
     <script type="module">
@@ -376,15 +470,25 @@ function App() {
         container: document.getElementById("container"),
         onConnect: (connection) => {
           console.log("Connection created:", connection);
-        },
+        }
       });
 
       connector.registerNode("node1", document.getElementById("node1"), {
         dotPositions: ["right"],
+        info: {
+          id: "123",
+          name: "apple",
+          desc: "this is a red apple"
+        }
       });
 
       connector.registerNode("node2", document.getElementById("node2"), {
         dotPositions: ["left"],
+        info: {
+          id: "456",
+          name: "pear",
+          desc: "this is a yellow pear"
+        }
       });
     </script>
   </body>
@@ -398,17 +502,22 @@ function App() {
 ```javascript
 // Node with both left and right connection points
 connector.registerNode("centerNode", element, {
-  dotPositions: ["left", "right"],
+  dotPositions: ["left", "right"]
 });
 
 // Node with only left connection point
 connector.registerNode("endNode", element, {
   dotPositions: ["left"],
+  info: {
+    id: "456",
+    name: "pear",
+    desc: "this is a yellow pear"
+  }
 });
 
 // Node with only right connection point
 connector.registerNode("startNode", element, {
-  dotPositions: ["right"],
+  dotPositions: ["right"]
 });
 ```
 
@@ -421,7 +530,7 @@ const connector = new Connector({
   lineWidth: 3, // Thicker lines
   dotSize: 16, // Larger dots
   dotColor: "#4ECDC4", // Teal dots
-  deleteButtonSize: 24, // Larger delete button
+  deleteButtonSize: 24 // Larger delete button
 });
 ```
 
@@ -444,7 +553,7 @@ const connector = new Connector({
 
     // Update database, state, etc.
     removeConnection(connection);
-  },
+  }
 });
 ```
 

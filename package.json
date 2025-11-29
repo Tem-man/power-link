@@ -7,10 +7,10 @@
     "build": "vue-tsc -b && vite build",
     "preview": "vite preview",
     "build:connector": "pnpm --dir packages build",
-    "build:node-link": "pnpm --dir packages build"
+    "build:power-link": "pnpm --dir packages build"
   },
   "dependencies": {
-    "node-link-utils": "^1.0.3",
+    "power-link": "^0.0.6",
     "vue": "^3.5.22"
   },
   "devDependencies": {

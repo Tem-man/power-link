@@ -50,7 +50,6 @@ class Connector {
     // 画布拖拽状态
     this.isPanning = false; // 是否正在拖拽画布
     this.panStart = { x: 0, y: 0 }; // 拖拽起始位置
-    this.spacePressed = false; // 空格键是否按下
 
     // 内容包装器
     this.contentWrapper = null;
@@ -143,21 +142,19 @@ class Connector {
    */
   bindZoomEvents() {
     this.handleWheel = (e) => {
-      // Ctrl + 滚轮缩放
-      if (e.ctrlKey || e.metaKey) {
-        e.preventDefault();
+      // 滚轮直接缩放
+      e.preventDefault();
 
-        const containerRect = this.container.getBoundingClientRect();
-        const mouseX = e.clientX - containerRect.left;
-        const mouseY = e.clientY - containerRect.top;
+      const containerRect = this.container.getBoundingClientRect();
+      const mouseX = e.clientX - containerRect.left;
+      const mouseY = e.clientY - containerRect.top;
 
-        // 计算缩放方向
-        const delta = e.deltaY < 0 ? this.config.zoomStep : -this.config.zoomStep;
-        const newScale = Math.max(this.config.minZoom, Math.min(this.config.maxZoom, this.viewState.scale + delta));
+      // 计算缩放方向
+      const delta = e.deltaY < 0 ? this.config.zoomStep : -this.config.zoomStep;
+      const newScale = Math.max(this.config.minZoom, Math.min(this.config.maxZoom, this.viewState.scale + delta));
 
-        // 以鼠标位置为中心缩放
-        this.zoomAtPoint(newScale, mouseX, mouseY);
-      }
+      // 以鼠标位置为中心缩放
+      this.zoomAtPoint(newScale, mouseX, mouseY);
     };
 
     // 绑定滚轮事件，使用 passive: false 允许 preventDefault
@@ -168,38 +165,31 @@ class Connector {
    * 绑定平移事件
    */
   bindPanEvents() {
-    // 监听空格键
-    this.handleKeyDown = (e) => {
-      if (e.code === "Space" && !this.spacePressed && !this.isDragging && !this.isDraggingNode) {
-        e.preventDefault();
-        this.spacePressed = true;
-        this.container.style.cursor = "grab";
-      }
-    };
+    // 设置默认光标
+    this.container.style.cursor = "grab";
 
-    this.handleKeyUp = (e) => {
-      if (e.code === "Space") {
-        this.spacePressed = false;
-        this.container.style.cursor = "";
-        if (this.isPanning) {
-          this.stopPan();
-        }
-      }
-    };
-
-    // 鼠标按下
+    // 鼠标按下 - 直接左键平移
     this.handlePanStart = (e) => {
-      if (this.spacePressed && !this.isDragging && !this.isDraggingNode) {
-        e.preventDefault();
-        e.stopPropagation();
-
-        this.isPanning = true;
-        this.panStart = {
-          x: e.clientX - this.viewState.translateX,
-          y: e.clientY - this.viewState.translateY,
-        };
-        this.container.style.cursor = "grabbing";
+      // 如果点击的是连接点或正在拖拽连线/节点，不处理画布拖拽
+      if (e.target.classList.contains("connector-dot") || this.isDragging || this.isDraggingNode) {
+        return;
       }
+
+      // 检查是否点击在节点上（节点拖拽优先）
+      const clickedNode = this.getNodeAtPosition(e.clientX, e.clientY);
+      if (clickedNode && this.config.enableNodeDrag) {
+        return;
+      }
+
+      e.preventDefault();
+      e.stopPropagation();
+
+      this.isPanning = true;
+      this.panStart = {
+        x: e.clientX - this.viewState.translateX,
+        y: e.clientY - this.viewState.translateY,
+      };
+      this.container.style.cursor = "grabbing";
     };
 
     // 鼠标移动
@@ -220,8 +210,6 @@ class Connector {
     };
 
     // 绑定事件
-    document.addEventListener("keydown", this.handleKeyDown);
-    document.addEventListener("keyup", this.handleKeyUp);
     this.container.addEventListener("mousedown", this.handlePanStart);
     document.addEventListener("mousemove", this.handlePanMove);
     document.addEventListener("mouseup", this.handlePanEnd);
@@ -232,7 +220,7 @@ class Connector {
    */
   stopPan() {
     this.isPanning = false;
-    this.container.style.cursor = this.spacePressed ? "grab" : "";
+    this.container.style.cursor = "grab";
   }
 
   /**
@@ -350,6 +338,27 @@ class Connector {
    */
   getViewState() {
     return { ...this.viewState };
+  }
+
+  /**
+   * 设置视图状态（用于初始化或恢复视图）
+   * @param {Object} state - 视图状态
+   *   - scale: number - 缩放比例（可选，默认 1）
+   *   - translateX: number - X 轴平移（可选，默认 0）
+   *   - translateY: number - Y 轴平移（可选，默认 0）
+   */
+  setViewState(state = {}) {
+    if (typeof state.scale === "number") {
+      // 限制缩放范围
+      this.viewState.scale = Math.max(this.config.minZoom, Math.min(this.config.maxZoom, state.scale));
+    }
+    if (typeof state.translateX === "number") {
+      this.viewState.translateX = state.translateX;
+    }
+    if (typeof state.translateY === "number") {
+      this.viewState.translateY = state.translateY;
+    }
+    this.updateTransform();
   }
 
   /**
@@ -499,8 +508,8 @@ class Connector {
     const { element } = node;
 
     element.addEventListener("mousedown", (e) => {
-      // 如果点击的是连接点或者正在平移画布，不处理节点拖拽
-      if (e.target.classList.contains("connector-dot") || this.spacePressed) {
+      // 如果点击的是连接点，不处理节点拖拽
+      if (e.target.classList.contains("connector-dot")) {
         return;
       }
 
@@ -512,16 +521,18 @@ class Connector {
 
       const rect = element.getBoundingClientRect();
       const wrapperRect = this.contentWrapper.getBoundingClientRect();
+      const { scale } = this.viewState;
 
-      // 计算鼠标在节点内的偏移量（相对于节点左上角）
+      // 计算鼠标在节点内的偏移量（相对于节点左上角，需要除以缩放比例）
       this.dragOffset = {
-        x: e.clientX - rect.left,
-        y: e.clientY - rect.top,
+        x: (e.clientX - rect.left) / scale,
+        y: (e.clientY - rect.top) / scale,
       };
 
       // 将当前位置转换为 left/top 定位，避免拖拽时跳动
-      const currentLeft = rect.left - wrapperRect.left;
-      const currentTop = rect.top - wrapperRect.top;
+      // 需要除以缩放比例，因为 left/top 是在未缩放的坐标系中
+      const currentLeft = (rect.left - wrapperRect.left) / scale;
+      const currentTop = (rect.top - wrapperRect.top) / scale;
 
       element.style.left = `${currentLeft}px`;
       element.style.top = `${currentTop}px`;
@@ -541,10 +552,11 @@ class Connector {
     if (!this.isDraggingNode || !this.draggedNode) return;
 
     const wrapperRect = this.contentWrapper.getBoundingClientRect();
+    const { scale } = this.viewState;
 
-    // 计算新位置：鼠标位置 - wrapper偏移 - 鼠标在节点内的偏移
-    const newX = e.clientX - wrapperRect.left - this.dragOffset.x;
-    const newY = e.clientY - wrapperRect.top - this.dragOffset.y;
+    // 计算新位置：(鼠标位置 - wrapper偏移) / 缩放比例 - 鼠标在节点内的偏移
+    const newX = (e.clientX - wrapperRect.left) / scale - this.dragOffset.x;
+    const newY = (e.clientY - wrapperRect.top) / scale - this.dragOffset.y;
 
     // 更新节点位置
     this.draggedNode.element.style.left = `${newX}px`;
@@ -1188,12 +1200,6 @@ class Connector {
     // 移除缩放和平移事件监听
     if (this.handleWheel) {
       this.container.removeEventListener("wheel", this.handleWheel);
-    }
-    if (this.handleKeyDown) {
-      document.removeEventListener("keydown", this.handleKeyDown);
-    }
-    if (this.handleKeyUp) {
-      document.removeEventListener("keyup", this.handleKeyUp);
     }
     if (this.handlePanStart) {
       this.container.removeEventListener("mousedown", this.handlePanStart);

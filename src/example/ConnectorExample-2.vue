@@ -3,7 +3,7 @@
     <div class="connector-container" ref="containerRef">
       <div class="node node-1" ref="node1Ref">
         <div class="node-icon">🤖</div>
-        <div class="node-label">Robot</div>
+        <div class="node-label">robot</div>
       </div>
 
       <div class="node node-2" ref="node2Ref">
@@ -39,7 +39,6 @@
       <button @click="silentConnect" class="btn btn-success">
         <span class="icon">🔇</span> 静默连接
       </button>
-
       <button @click="programmaticDisconnect" class="btn btn-danger">
         <span class="icon">✂️</span> 断开所有连接
       </button>
@@ -62,7 +61,14 @@
       </button>
     </div>
 
-
+    <div class="zoom-indicator">
+      <div class="zoom-value">{{ (currentZoom * 100).toFixed(0) }}%</div>
+      <div class="zoom-tips">
+        <div class="tip">💡 <kbd>Ctrl</kbd> + 滚轮：缩放</div>
+        <div class="tip">💡 <kbd>Space</kbd> + 拖拽：平移</div>
+        <div class="tip">💡 窗口大小变化时自动更新连线</div>
+      </div>
+    </div>
 
     <div class="logs">
       <h3>事件日志：</h3>
@@ -79,8 +85,7 @@
 <script setup>
   import { ref, onMounted, onBeforeUnmount } from 'vue'
   import Connector from '../../packages/utils/connector/Connector.js'
-
-
+  // import Connector from "power-link";
   const containerRef = ref(null)
   const node1Ref = ref(null)
   const node2Ref = ref(null)
@@ -286,13 +291,6 @@
       }
     })
 
-    // 设置初始视图状态（缩放 80%，向右下平移 50px）
-    connector.setViewState({
-      scale: 0.8,
-      translateX: 50,
-      translateY: 30
-    })
-
     // 初始化缩放显示
     currentZoom.value = connector.getZoom()
 
@@ -377,7 +375,7 @@
 
     .connector-container {
       position: relative;
-      height: 400px;
+      height: 600px;
       background: linear-gradient(135deg, #f5f7fa 0%, #e8eef5 100%);
       border-radius: 12px;
       padding: 40px;
