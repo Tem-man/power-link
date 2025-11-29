@@ -1,16 +1,16 @@
 # power-link
 
-[![npm version](https://img.shields.io/npm/v/node-link-utils.svg)](https://www.npmjs.com/package/node-link-utils)
-[![license](https://img.shields.io/npm/l/node-link-utils.svg)](https://github.com/your-username/node-link-utils/blob/main/LICENSE)
+[![npm version](https://img.shields.io/npm/v/power-link.svg)](https://www.npmjs.com/package/power-link)
+[![license](https://img.shields.io/npm/l/power-link.svg)](https://github.com/Tem-man/power-link/blob/main)
 
 A pure JavaScript visual node connector for creating draggable connections between nodes. Framework-agnostic and easy to use.
 
-![Node Link Connector Demo](https://github.com/Tem-man/node-link-utils/blob/main/packages/images/screen-shot.png)
+![Node Link Connector Demo](https://github.com/Tem-man/power-link/blob/main/public/images/screen-shot.png)
 
 ### 📹 Demo Video
 
 <video width="100%" controls>
-  <source src="https://github.com/Tem-man/node-link-utils/raw/main/packages/images/video.mp4" type="video/mp4">
+  <source src="https://github.com/Tem-man/power-link/blob/main/public/images/video.mp4" type="video/mp4">
   Your browser does not support the video tag.
 </video>
 
@@ -127,6 +127,11 @@ connector.registerNode("node2", node2, {
 | `enableNodeDrag`   | Boolean     | `true`       | Enable node dragging                |
 | `enableSnap`       | Boolean     | `true`       | Enable connection snapping          |
 | `snapDistance`     | Number      | `20`         | Snap distance in pixels             |
+| `enableZoom`       | Boolean     | `true`       | Enable zoom functionality           |
+| `enablePan`        | Boolean     | `true`       | Enable pan functionality            |
+| `minZoom`          | Number      | `0.1`        | Minimum zoom level (10%)            |
+| `maxZoom`          | Number      | `4`          | Maximum zoom level (400%)           |
+| `zoomStep`         | Number      | `0.1`        | Zoom step size (10%)                |
 | `onConnect`        | Function    | `() => {}`   | Callback when connection is created |
 | `onDisconnect`     | Function    | `() => {}`   | Callback when connection is removed |
 
