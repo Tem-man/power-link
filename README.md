@@ -168,7 +168,7 @@ connector.registerNode("myNode", element, {
 });
 ```
 
-#### `createConnection(fromNode, toNode, fromDot, toDot)`
+#### `createConnection(fromNode, toNode, fromDot, toDot，options)`
 
 Programmatically create a connection between nodes.
 
@@ -178,6 +178,8 @@ Programmatically create a connection between nodes.
 - `toNode` (Object): Target node object
 - `fromDot` (Object): Source connection dot (optional)
 - `toDot` (Object): Target connection dot (optional)
+- `options` (Object): Configuration options (optional)
+  - `silent` (boolean): Whether to create silently (without triggering callbacks)
 
 **Returns:** Connection object
 
@@ -186,22 +188,26 @@ Programmatically create a connection between nodes.
 ```javascript
 const node1 = connector.nodes[0];
 const node2 = connector.nodes[1];
-connector.createConnection(node1, node2);
+connector.createConnection(node1, node2); // Create connection with callbacks
+connector.createConnection(node1, node2, null, null, { silent: true }); // Create connection silently without triggering callbacks
 ```
 
-#### `disconnect(connectionId)`
+#### `disconnect(connectionId，options)`
 
 Remove a connection.
 
 **Parameters:**
 
 - `connectionId` (String): Connection ID (optional, if not provided, removes all connections)
+- `options` (Object): Configuration options (optional)
+  - `silent` (boolean): Whether to disconnect silently (without triggering callbacks)
 
 **Example:**
 
 ```javascript
 connector.disconnect(); // Remove all connections
 connector.disconnect("connection-id"); // Remove specific connection
+connector.disconnect("connection-id", { silent: true }); // Remove connection silently without triggering callbacks
 ```
 
 #### `getConnections()`
@@ -235,14 +241,20 @@ Update node position (called when node is moved).
 
 - `nodeId` (String): Node ID
 
-#### `destroy()`
+#### `destroy(options)`
 
 Destroy the connector and clean up all resources.
+
+**Parameters:**
+
+- `options` (Object): Configuration options (optional)
+  - `silent` (boolean): Whether to destroy silently (without triggering callbacks)
 
 **Example:**
 
 ```javascript
-connector.destroy();
+connector.destroy(); // Destroy silently by default (without triggering callbacks)
+connector.destroy({ silent: false }); // Destroy non-silently (triggering callbacks)
 ```
 
 #### `setViewState(scale,translateX,translateY)`
@@ -523,6 +535,87 @@ connector.registerNode("endNode", element, {
 // Node with only right connection point
 connector.registerNode("startNode", element, {
   dotPositions: ["right"]
+});
+```
+
+### Silent Operations (No Callbacks)
+
+Sometimes you may want to perform operations without triggering callbacks, such as when initializing connections from saved data or bulk operations.
+
+```javascript
+// Silent connection creation (won't trigger onConnect callback)
+const node1 = connector.nodes[0];
+const node2 = connector.nodes[1];
+connector.createConnection(node1, node2, null, null, { silent: true });
+
+// Silent disconnection (won't trigger onDisconnect callback)
+connector.disconnect("connection-id", { silent: true });
+
+// Silent destroy (won't trigger callbacks, default behavior)
+connector.destroy(); // Default is silent
+connector.destroy({ silent: false }); // Non-silent destroy (triggers callbacks)
+
+// Example: Restore connections from saved data without triggering callbacks
+const savedConnections = [
+  { from: "node1", to: "node2", fromDot: "right", toDot: "left" },
+  { from: "node2", to: "node3", fromDot: "right", toDot: "left" }
+];
+
+savedConnections.forEach((conn) => {
+  const fromNode = connector.nodes.find((n) => n.id === conn.from);
+  const toNode = connector.nodes.find((n) => n.id === conn.to);
+  const fromDot = fromNode?.dots[conn.fromDot];
+  const toDot = toNode?.dots[conn.toDot];
+
+  if (fromNode && toNode && fromDot && toDot) {
+    connector.createConnection(fromNode, toNode, fromDot, toDot, { silent: true });
+  }
+});
+```
+
+### Node Info and Connection Data
+
+You can attach custom information to nodes using the `info` parameter, which will be available in connection callbacks.
+
+```javascript
+// Register node with custom info
+const items = [
+  { id: "node1", name: "Apple", desc: "This is a red apple", type: "fruit" },
+  { id: "node2", name: "Pear", desc: "This is a yellow pear", type: "fruit" }
+];
+
+items.forEach((item) => {
+  const nodeElement = document.getElementById(item.id);
+  connector.registerNode(item.id, nodeElement, {
+    dotPositions: ["left"],
+    info: item // Attach custom info to the node
+  });
+});
+
+// Access node info in connection callbacks
+const connector = new Connector({
+  container: container,
+  onConnect: async (connection) => {
+    console.log("Connection created:", connection);
+    console.log("From node info:", connection.fromInfo);
+    // { id: "node1", name: "Apple", desc: "This is a red apple", type: "fruit" }
+    console.log("To node info:", connection.toInfo);
+    // { id: "node2", name: "Pear", desc: "This is a yellow pear", type: "fruit" }
+
+    // You can use the info for saving to database, validation, etc.
+    await saveConnection({
+      from: connection.from,
+      to: connection.to,
+      fromInfo: connection.fromInfo,
+      toInfo: connection.toInfo
+    });
+  },
+
+  onDisconnect: (connection) => {
+    console.log("Connection removed:", connection);
+    console.log("From node info:", connection.fromInfo);
+    console.log("To node info:", connection.toInfo);
+  }
 });
 ```
 
