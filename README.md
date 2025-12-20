@@ -7,8 +7,6 @@ A pure JavaScript visual node connector for creating draggable connections betwe
 
 ![Node Link Connector Demo](https://github.com/Tem-man/power-link/blob/main/public/images/screen-shot.png)
 
-![Node Link Connector Demo](https://github.com/Tem-man/power-link/blob/main/public/images/screen-shot-2.png)
-
 ### 📹 Demo Video
 
 <video width="100%" controls>
