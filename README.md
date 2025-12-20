@@ -118,24 +118,25 @@ connector.registerNode("node2", node2, {
 
 ### Constructor Options
 
-| Option             | Type        | Default      | Description                         |
-| ------------------ | ----------- | ------------ | ----------------------------------- |
-| `container`        | HTMLElement | **Required** | Container element for the connector |
-| `lineColor`        | String      | `'#155BD4'`  | Color of connection lines           |
-| `lineWidth`        | Number      | `2`          | Width of connection lines           |
-| `dotSize`          | Number      | `12`         | Size of connection dots             |
-| `dotColor`         | String      | `'#155BD4'`  | Color of connection dots            |
-| `deleteButtonSize` | Number      | `20`         | Size of delete button               |
-| `enableNodeDrag`   | Boolean     | `true`       | Enable node dragging                |
-| `enableSnap`       | Boolean     | `true`       | Enable connection snapping          |
-| `snapDistance`     | Number      | `20`         | Snap distance in pixels             |
-| `enableZoom`       | Boolean     | `true`       | Enable zoom functionality           |
-| `enablePan`        | Boolean     | `true`       | Enable pan functionality            |
-| `minZoom`          | Number      | `0.1`        | Minimum zoom level (10%)            |
-| `maxZoom`          | Number      | `4`          | Maximum zoom level (400%)           |
-| `zoomStep`         | Number      | `0.1`        | Zoom step size (10%)                |
-| `onConnect`        | Function    | `() => {}`   | Callback when connection is created |
-| `onDisconnect`     | Function    | `() => {}`   | Callback when connection is removed |
+| Option             | Type        | Default      | Description                                     |
+| ------------------ | ----------- | ------------ | ----------------------------------------------- |
+| `container`        | HTMLElement | **Required** | Container element for the connector             |
+| `lineColor`        | String      | `'#155BD4'`  | Color of connection lines                       |
+| `lineWidth`        | Number      | `2`          | Width of connection lines                       |
+| `dotSize`          | Number      | `12`         | Size of connection dots                         |
+| `dotColor`         | String      | `'#155BD4'`  | Color of connection dots                        |
+| `dotHoverScale`    | Number      | `1.8`        | Scale factor when hovering over connection dots |
+| `deleteButtonSize` | Number      | `20`         | Size of delete button                           |
+| `enableNodeDrag`   | Boolean     | `true`       | Enable node dragging                            |
+| `enableSnap`       | Boolean     | `true`       | Enable connection snapping                      |
+| `snapDistance`     | Number      | `20`         | Snap distance in pixels                         |
+| `enableZoom`       | Boolean     | `true`       | Enable zoom functionality                       |
+| `enablePan`        | Boolean     | `true`       | Enable pan functionality                        |
+| `minZoom`          | Number      | `0.1`        | Minimum zoom level (10%)                        |
+| `maxZoom`          | Number      | `4`          | Maximum zoom level (400%)                       |
+| `zoomStep`         | Number      | `0.1`        | Zoom step size (10%)                            |
+| `onConnect`        | Function    | `() => {}`   | Callback when connection is created             |
+| `onDisconnect`     | Function    | `() => {}`   | Callback when connection is removed             |
 
 ### Methods
 

@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       power-link:
-        specifier: ^0.0.7
-        version: 0.0.7
+        specifier: ^0.0.9
+        version: 0.0.9
       vue:
         specifier: ^3.5.22
         version: 3.5.22(typescript@5.9.3)
@@ -1715,8 +1715,8 @@ packages:
     resolution: {integrity: sha512-3Ybi1tAuwAP9s0r1UQ2J4n5Y0G05bJkpUIO0/bI9MhwmD70S5aTWbXGBwxHrelT+XM1k6dM0pk+SwNkpTRN7Pg==}
     engines: {node: ^10 || ^12 || >=14}
 
-  power-link@0.0.7:
-    resolution: {integrity: sha512-jS4Mg58vLVNSnV4d+Z8KNLBRQJY8HCiT6UjLxJArNbR35TODjV2WnctmTzuDMFgG8IvorQHQijwLGbNOjMExGg==}
+  power-link@0.0.9:
+    resolution: {integrity: sha512-uE+GY4hikAoKqMiEXoyDhCGvVo4m0Y8iFheZ31MmtIQWlHz96/d0DE9vJd7we6K+cRTFwZvVYx2h7IsOenP4pA==}
 
   promise.series@0.2.0:
     resolution: {integrity: sha512-VWQJyU2bcDTgZw8kpfBpB/ejZASlCrzwz5f2hjb/zlujOEB4oeiAhHygAWq8ubsX2GVkD4kCU5V2dwOTaCY5EQ==}
@@ -3765,7 +3765,7 @@ snapshots:
       picocolors: 1.1.1
       source-map-js: 1.2.1
 
-  power-link@0.0.7: {}
+  power-link@0.0.9: {}
 
   promise.series@0.2.0: {}
 

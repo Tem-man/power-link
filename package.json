@@ -9,7 +9,7 @@
     "build:power-link": "pnpm --dir packages build"
   },
   "dependencies": {
-    "power-link": "^0.0.7",
+    "power-link": "^0.0.9",
     "vue": "^3.5.22"
   },
   "devDependencies": {

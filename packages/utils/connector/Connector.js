@@ -24,6 +24,7 @@ class Connector {
       lineWidth: options.lineWidth || 2,
       dotSize: options.dotSize || 12,
       dotColor: options.dotColor || "#155BD4",
+      dotHoverScale: options.dotHoverScale || 1.8,
       deleteButtonSize: options.deleteButtonSize || 20,
       enableNodeDrag: options.enableNodeDrag !== false, // 默认启用节点拖拽
       snapDistance: options.snapDistance || 20, // 吸附距离（像素）
@@ -463,7 +464,7 @@ class Connector {
 
     // 悬浮效果
     dot.addEventListener("mouseenter", () => {
-      dot.style.transform = "translateY(-50%) scale(1.2)"
+      dot.style.transform = `translateY(-50%) scale(${this.config.dotHoverScale})`
     })
     dot.addEventListener("mouseleave", () => {
       dot.style.transform = "translateY(-50%) scale(1)"

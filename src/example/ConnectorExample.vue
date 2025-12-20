@@ -133,9 +133,9 @@
 
 <script setup>
   import { ref, onMounted, onBeforeUnmount } from "vue";
-  // import Connector from '../../packages/utils/connector/Connector.js'
+  import Connector from "../../packages/utils/connector/Connector.js";
   // import Connector from "../../packages/dist/index.js";
-  import Connector from "power-link";
+  // import Connector from "power-link";
 
   const containerRef = ref(null);
   const node1Ref = ref(null);
@@ -307,6 +307,7 @@
       lineColor: "#155BD4",
       lineWidth: 2,
       dotSize: 12,
+      dotHoverScale: 1.8,
       dotColor: "#155BD4",
       deleteButtonSize: 24,
       enableNodeDrag: true, // 启用节点拖拽
