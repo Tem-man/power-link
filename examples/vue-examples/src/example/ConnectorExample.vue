@@ -80,8 +80,6 @@
 
 <script setup>
   import { ref, onMounted, onBeforeUnmount } from "vue";
-  // import Connector from "../../packages/utils/connector/Connector.js";
-  // import Connector from "../../packages/dist/index.js";
   import Connector from "power-link";
 
   const containerRef = ref(null);
@@ -121,12 +119,13 @@
 
   // 编程方式建立连接
   const programmaticConnect = () => {
-    if (connector && connector.nodes.length >= 2) {
+    const nodes = connector?.getNodes() || [];
+    if (connector && nodes.length >= 2) {
       // 建立多条连接示例 - 演示双触点功能
-      const node1 = connector.nodes[0]; // LLM (左右触点)
-      const node2 = connector.nodes[1]; // 知识检索 (左右触点)
-      const node3 = connector.nodes[2]; // 搜索引擎 (左触点)
-      const node5 = connector.nodes[4]; // 输出结果 (左右触点)
+      const node1 = nodes[0]; // LLM (左右触点)
+      const node2 = nodes[1]; // 知识检索 (左右触点)
+      const node3 = nodes[2]; // 搜索引擎 (左触点)
+      const node5 = nodes[4]; // 输出结果 (左右触点)
 
       // 自动选择合适的触点建立连接（会触发 onConnect 回调）
       connector.createConnection(node1, node2);
@@ -140,9 +139,10 @@
 
   // 静默方式建立连接（不触发回调）
   const silentConnect = () => {
-    if (connector && connector.nodes.length >= 2) {
-      const node6 = connector.nodes[5]; // 输入数据
-      const node1 = connector.nodes[0]; // LLM
+    const nodes = connector?.getNodes() || [];
+    if (connector && nodes.length >= 2) {
+      const node6 = nodes[5]; // 输入数据
+      const node1 = nodes[0]; // LLM
 
       // 使用 silent: true 静默创建连接，不触发 onConnect 回调
       connector.createConnection(node6, node1, null, null, { silent: true });
@@ -153,7 +153,7 @@
 
   // 编程方式断开连接（触发回调）
   const programmaticDisconnect = () => {
-    if (connector && connector.connections && connector.connections.length > 0) {
+    if (connector && connector.getConnectionCount() > 0) {
       connector.disconnect();
       addLog("通过编程方式断开了所有连接（触发回调）", "warning");
     } else {
@@ -163,9 +163,9 @@
 
   // 静默方式断开连接（不触发回调）
   const silentDisconnect = () => {
-    if (connector && connector.connections && connector.connections.length > 0) {
-      const count = connector.connections.length;
-      connector.disconnect(null, { silent: true });
+    const count = connector?.getConnectionCount() || 0;
+    if (connector && count > 0) {
+      connector.disconnect(undefined, { silent: true });
       addLog(`静默断开了 ${count} 条连接（不触发回调）`, "info");
     } else {
       addLog("当前没有连接可以断开", "warning");
@@ -174,14 +174,15 @@
 
   // 编程方式断开指定连接（通过节点ID）
   const disconnectSpecific = (fromNodeId, toNodeId = null) => {
-    if (!connector || !connector.connections || connector.connections.length === 0) {
+    const connections = connector?.getConnectionModels() || [];
+    if (!connector || connections.length === 0) {
       addLog("当前没有连接可以断开", "warning");
       return;
     }
 
     // 如果只提供一个参数，断开该节点的所有连接
     if (!toNodeId) {
-      const nodeConnections = connector.connections.filter((conn) => conn.fromNode.id === fromNodeId || conn.toNode.id === fromNodeId);
+      const nodeConnections = connections.filter((conn) => conn.fromNode.id === fromNodeId || conn.toNode.id === fromNodeId);
 
       if (nodeConnections.length === 0) {
         addLog(`节点 ${fromNodeId} 没有连接`, "warning");
@@ -194,7 +195,7 @@
       addLog(`已断开节点 ${fromNodeId} 的 ${nodeConnections.length} 个连接`, "warning");
     } else {
       // 断开指定两个节点之间的连接
-      const targetConnection = connector.connections.find(
+      const targetConnection = connections.find(
         (conn) => (conn.fromNode.id === fromNodeId && conn.toNode.id === toNodeId) || (conn.fromNode.id === toNodeId && conn.toNode.id === fromNodeId)
       );
 
@@ -210,7 +211,7 @@
   // 通过连接ID断开连接
   const disconnectByConnectionId = (connectionId) => {
     if (connector) {
-      const conn = connector.connections.find((c) => c.id === connectionId);
+      const conn = connector.getConnection(connectionId);
       if (conn) {
         connector.disconnect(connectionId);
         addLog(`已断开连接: ${conn.fromNode.id} → ${conn.toNode.id}`, "warning");
