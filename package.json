@@ -1,0 +1,26 @@
+{
+  "name": "connector-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Connector Monorepo Project",
+  "scripts": {
+    "dev": "turbo run dev",
+    "dev:demo": "pnpm --filter vue-demo dev",
+    "build": "turbo run build",
+    "test": "turbo run test",
+    "lint": "turbo run lint",
+    "clean": "turbo run clean",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\""
+  },
+  "devDependencies": {
+    "@changesets/cli": "^2.27.1",
+    "prettier": "^3.2.5",
+    "turbo": "^1.12.4",
+    "typescript": "^5.3.3"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
+  },
+  "packageManager": "pnpm@8.15.0"
+}

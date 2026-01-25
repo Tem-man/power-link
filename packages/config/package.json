@@ -1,0 +1,10 @@
+{
+  "name": "@connector/config",
+  "version": "1.0.0",
+  "description": "Shared configuration files",
+  "main": "index.js",
+  "files": [
+    "eslint-preset.js",
+    "prettier-preset.js"
+  ]
+}
