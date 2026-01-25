@@ -1,5 +1,5 @@
 {
-  "name": "@connector/utils",
+  "name": "power-link",
   "version": "1.0.0",
   "description": "Shared utility functions",
   "main": "./dist/index.js",
@@ -13,8 +13,8 @@
     }
   },
   "scripts": {
-    "build": "tsup src/index.ts --format cjs,esm --dts",
-    "dev": "tsup src/index.ts --format cjs,esm --dts --watch",
+    "build": "tsup",
+    "dev": "tsup --watch",
     "test": "vitest",
     "lint": "eslint . --ext ts --report-unused-disable-directives --max-warnings 0",
     "clean": "rm -rf dist .turbo node_modules"

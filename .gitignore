@@ -1,32 +1,3 @@
-# Dependencies
-node_modules
-.pnpm-store
-
-# Build outputs
-dist
-build
-.next
-.turbo
-*.tsbuildinfo
-
-# Environment files
-.env
-.env.local
-.env.*.local
-
-# IDE
-.vscode/*
-!.vscode/settings.json
-!.vscode/extensions.json
-.idea
-*.swp
-*.swo
-*~
-
-# OS
-.DS_Store
-Thumbs.db
-
 # Logs
 logs
 *.log
@@ -34,11 +5,21 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
+lerna-debug.log*
 
-# Testing
-coverage
-.nyc_output
+node_modules
+dist
+dist-ssr
+*.local
+**/.npmrc
 
-# Misc
-*.tgz
-.cache
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?

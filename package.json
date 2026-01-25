@@ -1,8 +1,8 @@
 {
-  "name": "connector-monorepo",
+  "name": "power-link-monorepo",
   "version": "1.0.0",
   "private": true,
-  "description": "Connector Monorepo Project",
+  "description": "Power Link Monorepo Project",
   "scripts": {
     "dev": "turbo run dev",
     "dev:demo": "pnpm --filter vue-demo dev",
@@ -24,3 +24,4 @@
   },
   "packageManager": "pnpm@8.15.0"
 }
+

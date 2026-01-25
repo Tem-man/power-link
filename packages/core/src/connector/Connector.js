@@ -418,7 +418,7 @@ class Connector {
         const node = {
             id,
             element,
-            info: options ? .info,
+            info: options?.info,
             dots, // { left: {...}, right: {...} }
             dotPositions, // ['left', 'right'] 或 ['left'] 或 ['right']
             connections: [], // 存储该节点的所有连接
