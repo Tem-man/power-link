@@ -3,7 +3,7 @@
 [![npm version](https://img.shields.io/npm/v/power-link.svg)](https://www.npmjs.com/package/power-link)
 [![license](https://img.shields.io/npm/l/power-link.svg)](https://github.com/Tem-man/power-link/blob/main)
 
-A pure JavaScript visual node connector for creating draggable connections between nodes. Framework-agnostic and easy to use.
+A pure TypeScript visual node connector for creating draggable connections between nodes. Framework-agnostic and easy to use.
 
 ![Node Link Connector Demo](https://github.com/Tem-man/power-link/blob/main/public/images/screen-shot.png)
 
@@ -74,6 +74,12 @@ const connector = new Connector({
 
   onDisconnect: (connection) => {
     console.log("Connection removed:", connection);
+  },
+
+  onViewChange: (viewState) => {
+    console.log("View changed:", viewState);
+    // viewState: { scale: 1, translateX: 0, translateY: 0 }
+    // Save view state to restore later
   }
 });
 
@@ -135,6 +141,7 @@ connector.registerNode("node2", node2, {
 | `zoomStep`         | Number      | `0.1`        | Zoom step size (10%)                            |
 | `onConnect`        | Function    | `() => {}`   | Callback when connection is created             |
 | `onDisconnect`     | Function    | `() => {}`   | Callback when connection is removed             |
+| `onViewChange`     | Function    | `() => {}`   | Callback when view state changes (zoom/pan)    |
 
 ### Methods
 
@@ -169,28 +176,32 @@ connector.registerNode("myNode", element, {
 });
 ```
 
-#### `createConnection(fromNode, toNode, fromDot, toDot，options)`
+#### `createConnection(fromNodeId, toNodeId, fromDot, toDot, options)`
 
 Programmatically create a connection between nodes.
 
 **Parameters:**
 
-- `fromNode` (Object): Source node object
-- `toNode` (Object): Target node object
-- `fromDot` (Object): Source connection dot (optional)
-- `toDot` (Object): Target connection dot (optional)
+- `fromNodeId` (String): Source node ID
+- `toNodeId` (String): Target node ID
+- `fromDot` (String): Source connection dot position - `'left'` or `'right'` (optional)
+- `toDot` (String): Target connection dot position - `'left'` or `'right'` (optional)
 - `options` (Object): Configuration options (optional)
   - `silent` (boolean): Whether to create silently (without triggering callbacks)
 
-**Returns:** Connection object
+**Returns:** Connection object or undefined
 
 **Example:**
 
 ```javascript
-const node1 = connector.nodes[0];
-const node2 = connector.nodes[1];
-connector.createConnection(node1, node2); // Create connection with callbacks
-connector.createConnection(node1, node2, null, null, { silent: true }); // Create connection silently without triggering callbacks
+// Create connection with callbacks
+connector.createConnection("node1", "node2");
+
+// Create connection with specific dot positions
+connector.createConnection("node1", "node2", "right", "left");
+
+// Create connection silently without triggering callbacks
+connector.createConnection("node1", "node2", "right", "left", { silent: true });
 ```
 
 #### `disconnect(connectionId，options)`
@@ -258,24 +269,105 @@ connector.destroy(); // Destroy silently by default (without triggering callback
 connector.destroy({ silent: false }); // Destroy non-silently (triggering callbacks)
 ```
 
-#### `setViewState(scale,translateX,translateY)`
+#### `setViewState(state)`
 
-Set the initial view state
+Set the view state (for initialization or restoring view).
 
 **Parameters:**
 
-- `scale` (Number): set initial view scale
-- `translateX` (Number): set initial view x-axis translation
-- `translateY` (Number): set initial view y-axis translation
+- `state` (Object): View state object
+  - `scale` (Number): View scale (optional)
+  - `translateX` (Number): X-axis translation (optional)
+  - `translateY` (Number): Y-axis translation (optional)
 
 **Example:**
 
-````javascript
- connector.setViewState({
-      scale: 0.8,
-      translateX: 50,
-      translateY: 30
-    })
+```javascript
+connector.setViewState({
+  scale: 0.8,
+  translateX: 50,
+  translateY: 30
+});
+```
+
+#### `getViewState()`
+
+Get the current view state.
+
+**Returns:** ViewState object with `scale`, `translateX`, and `translateY` properties
+
+**Example:**
+
+```javascript
+const viewState = connector.getViewState();
+console.log(viewState); // { scale: 1, translateX: 0, translateY: 0 }
+```
+
+#### `setZoom(scale)`
+
+Set the zoom level (centered on canvas).
+
+**Parameters:**
+
+- `scale` (Number): Zoom scale (will be clamped to minZoom and maxZoom)
+
+**Example:**
+
+```javascript
+connector.setZoom(1.5); // Zoom to 150%
+```
+
+#### `getZoom()`
+
+Get the current zoom level.
+
+**Returns:** Number - Current zoom scale
+
+**Example:**
+
+```javascript
+const currentZoom = connector.getZoom();
+console.log(currentZoom); // 1.0
+```
+
+#### `zoomIn()`
+
+Zoom in by one step.
+
+**Example:**
+
+```javascript
+connector.zoomIn(); // Increase zoom by zoomStep
+```
+
+#### `zoomOut()`
+
+Zoom out by one step.
+
+**Example:**
+
+```javascript
+connector.zoomOut(); // Decrease zoom by zoomStep
+```
+
+#### `resetView()`
+
+Reset the view to default state (scale: 1, translateX: 0, translateY: 0).
+
+**Example:**
+
+```javascript
+connector.resetView(); // Reset to default view
+```
+
+#### `updateAllConnections()`
+
+Update all connection line positions (useful when container size changes or after manual node position updates).
+
+**Example:**
+
+```javascript
+connector.updateAllConnections(); // Refresh all connection lines
 ```
 
 
@@ -545,9 +637,7 @@ Sometimes you may want to perform operations without triggering callbacks, such 
 
 ```javascript
 // Silent connection creation (won't trigger onConnect callback)
-const node1 = connector.nodes[0];
-const node2 = connector.nodes[1];
-connector.createConnection(node1, node2, null, null, { silent: true });
+connector.createConnection("node1", "node2", "right", "left", { silent: true });
 
 // Silent disconnection (won't trigger onDisconnect callback)
 connector.disconnect("connection-id", { silent: true });
@@ -563,14 +653,13 @@ const savedConnections = [
 ];
 
 savedConnections.forEach((conn) => {
-  const fromNode = connector.nodes.find((n) => n.id === conn.from);
-  const toNode = connector.nodes.find((n) => n.id === conn.to);
-  const fromDot = fromNode?.dots[conn.fromDot];
-  const toDot = toNode?.dots[conn.toDot];
-
-  if (fromNode && toNode && fromDot && toDot) {
-    connector.createConnection(fromNode, toNode, fromDot, toDot, { silent: true });
-  }
+  connector.createConnection(
+    conn.from,
+    conn.to,
+    conn.fromDot,
+    conn.toDot,
+    { silent: true }
+  );
 });
 ```
 
@@ -652,8 +741,43 @@ const connector = new Connector({
 
     // Update database, state, etc.
     removeConnection(connection);
+  },
+
+  onViewChange: (viewState) => {
+    console.log("View changed:", viewState);
+    // { scale: 1, translateX: 0, translateY: 0 }
+
+    // Save view state to restore later
+    saveViewState(viewState);
   }
 });
+```
+
+### View Management
+
+```javascript
+// Get current view state
+const viewState = connector.getViewState();
+console.log(viewState); // { scale: 1, translateX: 0, translateY: 0 }
+
+// Set view state (restore saved view)
+connector.setViewState({
+  scale: 0.8,
+  translateX: 100,
+  translateY: 50
+});
+
+// Zoom controls
+connector.setZoom(1.5); // Set zoom to 150%
+connector.zoomIn(); // Zoom in by one step
+connector.zoomOut(); // Zoom out by one step
+const currentZoom = connector.getZoom(); // Get current zoom
+
+// Reset view
+connector.resetView(); // Reset to default (scale: 1, translateX: 0, translateY: 0)
+
+// Update all connections (useful after manual node position changes)
+connector.updateAllConnections();
 ```
 
 ## 🔧 Browser Support

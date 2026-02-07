@@ -1,55 +1,84 @@
-# Release v0.0.9
+# Release v1.0.1
 
-## 🎨 New Feature: Customizable Connection Dot Hover Scale
+## 🎉 Major Refactoring: TypeScript Migration
 
-We've added a new configuration option `dotHoverScale` that allows you to customize the scale factor when hovering over connection dots. This gives you more control over the visual feedback and helps match your design requirements.
+We're excited to announce that **power-link** has been completely refactored from JavaScript to **TypeScript**! This brings better type safety, improved developer experience, and enhanced IDE support.
 
-### What's New
+## ✨ What's New
 
-- **`dotHoverScale` Configuration**: Control the size increase of connection dots when hovering over them
-- **Default Value**: `1.8` (180% scale on hover)
-- **Backward Compatible**: Existing code will continue to work with the default hover effect
+### TypeScript Support
+- Full TypeScript rewrite with comprehensive type definitions
+- Built-in type checking and IntelliSense support
+- Better error detection during development
+- Type definitions included in the package (`dist/index.d.ts`)
 
-### Usage
+### Enhanced Build System
+- Modern build setup using `tsup`
+- Multiple output formats: CommonJS, ES Module, and IIFE
+- Source maps included for better debugging experience
 
+## ⚠️ Breaking Changes
+
+### `createConnection` API Change
+
+The `createConnection` method now accepts **node IDs (strings)** instead of node objects.
+
+**Before (v1.0.0):**
 ```javascript
-// Use default hover scale (1.8)
-const connector = new Connector({
-  container: document.getElementById("container"),
-  dotSize: 12,
-  dotColor: "#155BD4"
-  // dotHoverScale defaults to 1.8
-});
-
-// Custom larger hover effect
-const connector = new Connector({
-  container: document.getElementById("container"),
-  dotHoverScale: 2.0, // Scale dots to 200% when hovering
-  dotSize: 12,
-  dotColor: "#155BD4"
-});
-
-// Smaller hover effect
-const connector = new Connector({
-  container: document.getElementById("container"),
-  dotHoverScale: 1.5 // Scale dots to 150% when hovering
-});
-
-// Disable hover scale effect
-const connector = new Connector({
-  container: document.getElementById("container"),
-  dotHoverScale: 1.0 // No scale change on hover
-});
+const node1 = connector.nodes[0];
+const node2 = connector.nodes[1];
+connector.createConnection(node1, node2, fromDot, toDot);
 ```
 
-### API Changes
+**After (v1.0.1):**
+```javascript
+// Use node IDs instead
+connector.createConnection("node1", "node2");
+connector.createConnection("node1", "node2", "right", "left");
+connector.createConnection("node1", "node2", "right", "left", { silent: true });
+```
 
-- Added `dotHoverScale` option to `Connector` constructor (default: `1.8`)
+**Migration Guide:**
+- Replace node objects with their corresponding node ID strings
+- The method signature is now: `createConnection(fromNodeId, toNodeId, fromDotPosition?, toDotPosition?, options?)`
+- All parameters remain optional except for the two node IDs
 
-### Migration
+## 📦 Package Structure
 
-No migration needed! This is a backward-compatible addition. If you don't specify `dotHoverScale`, it will default to `1.8`, maintaining the same behavior as before.
+The package now includes:
+- `dist/index.js` - CommonJS build
+- `dist/index.mjs` - ES Module build
+- `dist/index.d.ts` - TypeScript type definitions
+- `dist/index.global.js` - IIFE build for browser usage
+
+## 🔧 Technical Improvements
+
+- **Type Safety**: Full TypeScript coverage with strict type checking
+- **Better DX**: Enhanced IDE autocomplete and type hints
+- **Modern Tooling**: Updated build pipeline with tsup
+- **Code Quality**: Improved code organization and maintainability
+
+## 📚 Documentation
+
+- Updated README with TypeScript examples
+- Complete API documentation with type information
+- Migration guide for existing users
+
+## 🚀 Installation
+
+```bash
+npm install power-link@1.0.1
+# or
+yarn add power-link@1.0.1
+# or
+pnpm add power-link@1.0.1
+```
+
+## 📝 Full Changelog
+
+- [Full Changelog](https://github.com/Tem-man/power-link/compare/v1.0.0...v1.0.1)
 
 ---
 
-**Full Changelog**: https://github.com/Tem-man/node-link-utils/compare/v0.0.8...v0.0.9
+**Note**: If you're upgrading from v1.0.0, please update your `createConnection` calls to use node IDs instead of node objects. The migration is straightforward and should only require minimal code changes.
+

@@ -1,0 +1,17 @@
+node_modules/
+*.log
+.DS_Store
+.env
+.env.local
+.vscode/
+.idea/
+*.map
+tsconfig.json
+tsup.config.ts
+vitest.config.ts
+rollup.config.js
+utils/rollup.config.js
+components/
+src/
+
+
