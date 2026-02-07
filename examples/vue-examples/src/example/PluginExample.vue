@@ -176,6 +176,7 @@ const CustomStylePlugin: PowerLinkPlugin = {
 
     // 注册 afterConnect 钩子 - 自定义连接线样式
     context.hooks.afterConnect.tap((connection: ConnectionModel) => {
+      console.log('链接后：', connection);
       const elements = connection.renderElements;
       if (!elements) return connection;
 

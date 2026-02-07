@@ -1,6 +1,6 @@
 /**
  * @fileoverview Connector 钩子集合
- * 提供类似 BaklavaJS 的 hooks 对象
+ *
  */
 
 import { SequentialHook, PreventableHook } from './Hook';

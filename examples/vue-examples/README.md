@@ -278,6 +278,72 @@ Set the initial view state
     })
 ```
 
+#### `save()`
+
+Save the current state of the connector (nodes, connections, and view state) to a serializable object.
+
+**Returns:** `ConnectorState` object containing:
+- `version` (String): Version number
+- `nodes` (Array): Array of node states with id, position, dotPositions, and info
+- `connections` (Array): Array of connection states with id, fromNodeId, toNodeId, fromDot, and toDot
+- `viewState` (Object): Current view state with scale, translateX, and translateY
+
+**Example:**
+
+```javascript
+// Save current state
+const state = connector.save();
+
+// Store in localStorage
+localStorage.setItem('connector-state', JSON.stringify(state));
+
+// Or send to server
+fetch('/api/save-state', {
+  method: 'POST',
+  body: JSON.stringify(state)
+});
+```
+
+#### `load(state, options)`
+
+Load a previously saved state to restore nodes, connections, and view state.
+
+**Parameters:**
+
+- `state` (Object): `ConnectorState` object to load
+- `options` (Object): Configuration options (optional)
+  - `silent` (boolean): Whether to load silently (without triggering callbacks, default: `false`)
+
+**Returns:** Array of warning messages (strings) if any nodes or connections could not be restored
+
+**Example:**
+
+```javascript
+// Load from localStorage
+const saved = localStorage.getItem('connector-state');
+if (saved) {
+  const state = JSON.parse(saved);
+  const warnings = connector.load(state);
+  
+  if (warnings.length > 0) {
+    console.warn('Loading warnings:', warnings);
+  }
+}
+
+// Load silently (without triggering onConnect/onDisconnect callbacks)
+const warnings = connector.load(state, { silent: true });
+
+// Load from server
+fetch('/api/load-state')
+  .then(res => res.json())
+  .then(state => {
+    const warnings = connector.load(state);
+    if (warnings.length > 0) {
+      console.warn('Some connections could not be restored:', warnings);
+    }
+  });
+```
+
 
 ## 🎨 Usage Examples
 
