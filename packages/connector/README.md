@@ -791,18 +791,13 @@ connector.updateAllConnections();
 
 MIT License
 
+## 🌟 Show Your Support
+
+Give a ⭐️ on [GitHub](https://github.com/Tem-man/power-link) if this project helped you!
+
 ## 🤝 Contributing
-
-Contributions, issues and feature requests are welcome!
-
-## 📮 Support
 
 If you have any questions or need help, please open an issue on GitHub.
 
-## 🌟 Show Your Support
-
-Give a ⭐️ if this project helped you!
-
 ---
 
-Made with ❤️ by the power-link team
