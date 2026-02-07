@@ -4,8 +4,14 @@ export default defineConfig({
   // 入口文件
   entry: ['src/index.ts'],
 
-  // 输出格式
-  format: ['cjs', 'esm'],
+  // 输出格式：CJS、ESM、IIFE（浏览器直接引用）
+  format: ['cjs', 'esm', 'iife'],
+
+  // IIFE 格式的全局变量名
+  globalName: 'PowerLink',
+
+  // 明确指定为浏览器平台
+  platform: 'browser',
 
   // 生成类型声明文件
   dts: true,
@@ -34,14 +40,11 @@ export default defineConfig({
   // 保留原始函数/类名
   keepNames: true,
 
-  // 配置横幅和输出选项
+  // 配置横幅和尾部代码
   esbuildOptions(options) {
-    options.banner = {
-      js: '/** @power-link/core - Visual node connector library */',
+    // 让 IIFE 的 PowerLink 直接可作为构造函数使用
+    options.footer = {
+      js: 'if(typeof PowerLink!=="undefined"&&PowerLink.default){Object.assign(PowerLink.default,PowerLink);PowerLink=PowerLink.default;}',
     }
   },
-
-  // 指定导出方式，避免 named/default exports 警告
-  esbuildPlugins: [],
 })
-

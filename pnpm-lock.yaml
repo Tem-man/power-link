@@ -24,8 +24,8 @@ importers:
   examples/vue-examples:
     dependencies:
       power-link:
-        specifier: ^0.1.2
-        version: 0.1.2
+        specifier: workspace:*
+        version: link:../../packages/connector
       vue:
         specifier: ^3.5.22
         version: 3.5.22(typescript@5.9.3)
@@ -84,7 +84,7 @@ importers:
 
   packages/config: {}
 
-  packages/core:
+  packages/connector:
     devDependencies:
       '@connector/tsconfig':
         specifier: workspace:*
@@ -2478,9 +2478,6 @@ packages:
   postcss@8.5.6:
     resolution: {integrity: sha512-3Ybi1tAuwAP9s0r1UQ2J4n5Y0G05bJkpUIO0/bI9MhwmD70S5aTWbXGBwxHrelT+XM1k6dM0pk+SwNkpTRN7Pg==}
     engines: {node: ^10 || ^12 || >=14}
-
-  power-link@0.1.2:
-    resolution: {integrity: sha512-uYcRSgsUN3tC85gbZmljZvtvLnQGWDsL6etQkpYViuv3HJ8ia3MhTpf0LjPhF2rglLfTpz0X7yGbZ/BhWNVptQ==}
 
   prettier@2.8.8:
     resolution: {integrity: sha512-tdN8qQGvNjw4CHbY+XXk0JgCXn9QiF21a55rBe5LJAU+kDyC4WQn4+awm2Xfk2lQMk5fKup9XgzTZtGkjBdP9Q==}
@@ -5480,8 +5477,6 @@ snapshots:
       nanoid: 3.3.11
       picocolors: 1.1.1
       source-map-js: 1.2.1
-
-  power-link@0.1.2: {}
 
   prettier@2.8.8: {}
 

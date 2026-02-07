@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "turbo run dev",
     "dev:demo": "pnpm --filter vue-demo dev",
+    "build:power-link": "pnpm --filter power-link build",
     "build": "turbo run build",
     "test": "turbo run test",
     "lint": "turbo run lint",
