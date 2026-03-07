@@ -8,8 +8,6 @@ A pure TypeScript visual node connector for creating draggable connections betwe
 ![Node Link Connector Demo](https://github.com/Tem-man/power-link/blob/main/public/images/screen-shot.png)
 
 
-**Watch the demo video** to see power-link in action! [Download video](https://github.com/Tem-man/node-link-utils/raw/main/packages/images/video.mp4)
-
 ## ✨ Features
 
 - 🎯 **Visual Node Connections** - Create beautiful bezier curve connections between nodes
@@ -74,6 +72,12 @@ const connector = new Connector({
     console.log("View changed:", viewState);
     // viewState: { scale: 1, translateX: 0, translateY: 0 }
     // Save view state to restore later
+  },
+
+  onNodeMove: ({ id, x, y }) => {
+    console.log("Node moved:", id, "to", x, y);
+    // Synchronize node position with your state management
+    // This prevents nodes from jumping back after dragging
   }
 });
 
@@ -136,6 +140,9 @@ connector.registerNode("node2", node2, {
 | `onConnect`        | Function    | `() => {}`   | Callback when connection is created             |
 | `onDisconnect`     | Function    | `() => {}`   | Callback when connection is removed             |
 | `onViewChange`     | Function    | `() => {}`   | Callback when view state changes (zoom/pan)    |
+| `onNodeMove`       | Function    | `() => {}`   | Callback when a node is dragged (receives `{ id, x, y }`) |
+| `onNodeSelect`     | Function    | `() => {}`   | Callback when a node is selected/deselected (receives node info or `null`) |
+| `onNodeDelete`     | Function    | `() => {}`   | Callback when a node is deleted (receives `{ id, info }`) |
 
 ### Methods
 
@@ -248,6 +255,34 @@ Update node position (called when node is moved).
 **Parameters:**
 
 - `nodeId` (String): Node ID
+
+#### `deleteNode(id)`
+
+Delete a node and all its connections. This method removes the node from the connector, disconnects all associated connections, and triggers the `onNodeDelete` callback.
+
+**Note:** This method does not remove the DOM element itself. You should handle DOM removal in your framework (e.g., Vue/React) within the `onNodeDelete` callback.
+
+**Parameters:**
+
+- `id` (String): Node ID to delete
+
+**Example:**
+
+```javascript
+// Delete a specific node
+connector.deleteNode('node1');
+
+// In your connector setup, handle the deletion callback
+const connector = new Connector({
+  container: container,
+  onNodeDelete: ({ id, info }) => {
+    console.log('Node deleted:', id);
+    // Remove node from your state management
+    // In Vue: nodes.value = nodes.value.filter(n => n.id !== id);
+    // In React: setNodes(nodes.filter(n => n.id !== id));
+  }
+});
+```
 
 #### `destroy(options)`
 
@@ -843,6 +878,65 @@ const connector = new Connector({
 
     // Save view state to restore later
     saveViewState(viewState);
+  },
+
+  onNodeMove: ({ id, x, y }) => {
+    console.log("Node moved:", id, "to", x, y);
+    // Synchronize node position with your state management
+    // This prevents nodes from jumping back to original position after dragging
+    // In Vue: const node = nodes.value.find(n => n.id === id); if (node) { node.x = x; node.y = y; }
+    // In React: setNodes(nodes.map(n => n.id === id ? { ...n, x, y } : n));
+  },
+
+  onNodeSelect: (info) => {
+    if (info) {
+      console.log("Node selected:", info.id, info.info);
+    } else {
+      console.log("Node deselected");
+    }
+  },
+
+  onNodeDelete: ({ id, info }) => {
+    console.log("Node deleted:", id);
+    // Remove node from your state management
+    // In Vue: nodes.value = nodes.value.filter(n => n.id !== id);
+    // In React: setNodes(nodes.filter(n => n.id !== id));
+  }
+});
+```
+
+### Node Management
+
+#### Node Position Synchronization
+
+When using frameworks like Vue or React, you need to synchronize node positions after dragging to prevent nodes from jumping back to their original position. Use the `onNodeMove` callback:
+
+**Vue Example:**
+
+```javascript
+const connector = new Connector({
+  container: containerRef.value,
+  onNodeMove: ({ id, x, y }) => {
+    // Update Vue reactive state
+    const node = nodes.value.find(n => n.id === id);
+    if (node) {
+      node.x = x;
+      node.y = y;
+    }
+  }
+});
+```
+
+**React Example:**
+
+```javascript
+const connector = new Connector({
+  container: containerRef.current,
+  onNodeMove: ({ id, x, y }) => {
+    // Update React state
+    setNodes(prevNodes => 
+      prevNodes.map(n => n.id === id ? { ...n, x, y } : n)
+    );
   }
 });
 ```
