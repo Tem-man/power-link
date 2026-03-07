@@ -1,84 +1,132 @@
-# Release v1.0.1
+# Release v2.0.0
 
-## 🎉 Major Refactoring: TypeScript Migration
+## 🎉 Major Features
 
-We're excited to announce that **power-link** has been completely refactored from JavaScript to **TypeScript**! This brings better type safety, improved developer experience, and enhanced IDE support.
+### ✨ Node Selection & Deletion
+- **Node Selection**: Click on a node to select it (with visual highlight), click on canvas to deselect
+- **Node Deletion**: Press `Delete` or `Backspace` key to delete the selected node
+- **Callbacks**: New `onNodeSelect` and `onNodeDelete` callbacks for handling selection and deletion events
 
-## ✨ What's New
+### 💾 Topology Export & Import
+- **`export()` Method**: Export the entire topology (nodes, connections, and view state) as a JSON object
+- **`import()` Method**: Restore topology from exported JSON data
+  - **Framework Mode**: Works seamlessly with Vue/React - library finds elements by `id` attribute
+  - **Native JS Mode**: Factory function support for creating DOM elements programmatically
+- **View State Persistence**: Automatically saves and restores zoom level and pan position
 
-### TypeScript Support
-- Full TypeScript rewrite with comprehensive type definitions
-- Built-in type checking and IntelliSense support
-- Better error detection during development
-- Type definitions included in the package (`dist/index.d.ts`)
+### 🔄 Node Position Synchronization
+- **`onNodeMove` Callback**: New callback to synchronize node positions after dragging
+- Fixes the bug where nodes would jump back to original position after dragging
 
-### Enhanced Build System
-- Modern build setup using `tsup`
-- Multiple output formats: CommonJS, ES Module, and IIFE
-- Source maps included for better debugging experience
+## 🐛 Bug Fixes
 
-## ⚠️ Breaking Changes
+### Connection Line Rendering
+- Fixed issue where connection lines were obscured when dragging nodes upward
+- Solution: Increased `contentWrapper` and SVG dimensions to prevent clipping
 
-### `createConnection` API Change
+### Dot Positions Configuration
+- Fixed bug where `dotPositions: "left"` or `"right"` (string format) was not properly recognized
+- Now supports all formats: `'both'`, `'left'`, `'right'`, `['left']`, `['right']`, `['left', 'right']`
 
-The `createConnection` method now accepts **node IDs (strings)** instead of node objects.
+### Connection Line Length
+- Fixed issue where connections appeared extremely long when using `right` CSS positioning
+- Recommendation: Use `left` positioning instead of `right` for better compatibility
 
-**Before (v1.0.0):**
-```javascript
-const node1 = connector.nodes[0];
-const node2 = connector.nodes[1];
-connector.createConnection(node1, node2, fromDot, toDot);
-```
+## 🎨 UI Improvements
 
-**After (v1.0.1):**
-```javascript
-// Use node IDs instead
-connector.createConnection("node1", "node2");
-connector.createConnection("node1", "node2", "right", "left");
-connector.createConnection("node1", "node2", "right", "left", { silent: true });
-```
+### Delete Button Enhancement
+- **SVG Rendering**: Delete button now uses pure SVG rendering instead of HTML/CSS
+- **Better Centering**: Improved × symbol centering within the red circle
+- **Visual Polish**: Optimized spacing between × symbol and circle border
 
-**Migration Guide:**
-- Replace node objects with their corresponding node ID strings
-- The method signature is now: `createConnection(fromNodeId, toNodeId, fromDotPosition?, toDotPosition?, options?)`
-- All parameters remain optional except for the two node IDs
+## 📚 Documentation Updates
 
-## 📦 Package Structure
+- Added comprehensive documentation for `export()` and `import()` methods
+- Updated `dotPositions` usage guide with all supported formats
+- Added examples for both framework mode and native JS mode
+- Enhanced API documentation with detailed parameter descriptions
 
-The package now includes:
-- `dist/index.js` - CommonJS build
-- `dist/index.mjs` - ES Module build
-- `dist/index.d.ts` - TypeScript type definitions
-- `dist/index.global.js` - IIFE build for browser usage
+## 🔧 API Changes
 
-## 🔧 Technical Improvements
+### New Methods
+- `connector.export()` - Export topology as JSON
+- `connector.import(data, nodeFactory?)` - Restore topology from JSON
+- `connector.selectNode(id)` - Programmatically select a node
+- `connector.deselectNode()` - Deselect current node
+- `connector.getSelectedNode()` - Get currently selected node
+- `connector.deleteNode(id)` - Programmatically delete a node
 
-- **Type Safety**: Full TypeScript coverage with strict type checking
-- **Better DX**: Enhanced IDE autocomplete and type hints
-- **Modern Tooling**: Updated build pipeline with tsup
-- **Code Quality**: Improved code organization and maintainability
+### New Callbacks
+- `onNodeMove({ id, x, y })` - Called when a node is dragged
+- `onNodeSelect(info)` - Called when a node is selected/deselected
+- `onNodeDelete({ id })` - Called when a node is deleted
 
-## 📚 Documentation
+### New Configuration
+- `selectedBorderColor` - Color for selected node border (default: `'#155BD4'`)
 
-- Updated README with TypeScript examples
-- Complete API documentation with type information
-- Migration guide for existing users
+## 📦 Type Definitions
 
-## 🚀 Installation
+### New Types
+- `ExportData` - Topology export data structure
+- `ExportNodeData` - Node data in export format
+- `ExportConnectionData` - Connection data in export format
+- `NodeFactory` - Factory function type for native JS mode
+- `NodeMoveInfo` - Node move callback data
+- `NodeSelectInfo` - Node selection callback data
+- `NodeDeleteInfo` - Node deletion callback data
 
-```bash
-npm install power-link@1.0.1
-# or
-yarn add power-link@1.0.1
-# or
-pnpm add power-link@1.0.1
-```
+### Updated Types
+- `RegisterNodeOptions.dotPositions` - Now supports `'both' | DotPosition | DotPosition[]`
+
+## 🚀 Migration Guide
+
+### For Existing Users
+
+1. **Node Position Synchronization**: If you're experiencing nodes jumping back after dragging, add the `onNodeMove` callback:
+   ```javascript
+   const connector = new Connector({
+     container: container,
+     onNodeMove: ({ id, x, y }) => {
+       // Update your node position in your state management
+       updateNodePosition(id, x, y);
+     }
+   });
+   ```
+
+2. **Dot Positions**: If you're using string format for `dotPositions`, ensure you're using `'left'` or `'right'` (now fully supported).
+
+3. **CSS Positioning**: If using `right` positioning, consider switching to `left` for better compatibility with the new `contentWrapper` structure.
 
 ## 📝 Full Changelog
 
-- [Full Changelog](https://github.com/Tem-man/power-link/compare/v1.0.0...v1.0.1)
+### Added
+- Node selection functionality with visual feedback
+- Node deletion via keyboard shortcut
+- Topology export/import functionality
+- View state persistence (zoom & pan)
+- SVG-based delete button rendering
+- `onNodeMove`, `onNodeSelect`, `onNodeDelete` callbacks
+- Programmatic node selection/deletion APIs
+
+### Fixed
+- Node position reset bug after dragging
+- Connection lines obscured by nodes
+- `dotPositions` string format not recognized
+- Extremely long connection lines with `right` positioning
+- Delete button × symbol centering
+
+### Changed
+- Delete button implementation (HTML → SVG)
+- `contentWrapper` dimensions increased to prevent clipping
+- Type definitions for `dotPositions` expanded
+
+### Documentation
+- Added export/import usage examples
+- Updated API documentation
+- Enhanced type definitions documentation
 
 ---
 
-**Note**: If you're upgrading from v1.0.0, please update your `createConnection` calls to use node IDs instead of node objects. The migration is straightforward and should only require minimal code changes.
+**Breaking Changes:** None - This is a backward-compatible release with new features.
 
+**Contributors:** Thanks to all contributors who helped make this release possible!

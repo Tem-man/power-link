@@ -74,6 +74,12 @@ const connector = new Connector({
     console.log("View changed:", viewState);
     // viewState: { scale: 1, translateX: 0, translateY: 0 }
     // Save view state to restore later
+  },
+
+  onNodeMove: ({ id, x, y }) => {
+    console.log("Node moved:", id, "to", x, y);
+    // Synchronize node position with your state management
+    // This prevents nodes from jumping back after dragging
   }
 });
 
@@ -136,6 +142,9 @@ connector.registerNode("node2", node2, {
 | `onConnect`        | Function    | `() => {}`   | Callback when connection is created             |
 | `onDisconnect`     | Function    | `() => {}`   | Callback when connection is removed             |
 | `onViewChange`     | Function    | `() => {}`   | Callback when view state changes (zoom/pan)    |
+| `onNodeMove`       | Function    | `() => {}`   | Callback when a node is dragged (receives `{ id, x, y }`) |
+| `onNodeSelect`     | Function    | `() => {}`   | Callback when a node is selected/deselected (receives node info or `null`) |
+| `onNodeDelete`     | Function    | `() => {}`   | Callback when a node is deleted (receives `{ id, info }`) |
 
 ### Methods
 
@@ -248,6 +257,34 @@ Update node position (called when node is moved).
 **Parameters:**
 
 - `nodeId` (String): Node ID
+
+#### `deleteNode(id)`
+
+Delete a node and all its connections. This method removes the node from the connector, disconnects all associated connections, and triggers the `onNodeDelete` callback.
+
+**Note:** This method does not remove the DOM element itself. You should handle DOM removal in your framework (e.g., Vue/React) within the `onNodeDelete` callback.
+
+**Parameters:**
+
+- `id` (String): Node ID to delete
+
+**Example:**
+
+```javascript
+// Delete a specific node
+connector.deleteNode('node1');
+
+// In your connector setup, handle the deletion callback
+const connector = new Connector({
+  container: container,
+  onNodeDelete: ({ id, info }) => {
+    console.log('Node deleted:', id);
+    // Remove node from your state management
+    // In Vue: nodes.value = nodes.value.filter(n => n.id !== id);
+    // In React: setNodes(nodes.filter(n => n.id !== id));
+  }
+});
+```
 
 #### `destroy(options)`
 
@@ -365,6 +402,104 @@ Update all connection line positions (useful when container size changes or afte
 ```javascript
 connector.updateAllConnections(); // Refresh all connection lines
 ```
+
+#### `export()`
+
+Export the current topology (nodes, connections, and view state) as a JSON object.
+
+**Returns:** ExportData object containing:
+- `nodes`: Array of node data (id, x, y, info, dotPositions)
+- `connections`: Array of connection data (from, to, fromDot, toDot)
+- `viewState`: Current view state (scale, translateX, translateY)
+
+**Example:**
+
+```javascript
+const data = connector.export();
+console.log(data);
+// {
+//   nodes: [
+//     { id: 'node1', x: 100, y: 100, info: {...}, dotPositions: ['right'] },
+//     { id: 'node2', x: 400, y: 100, info: {...}, dotPositions: ['left'] }
+//   ],
+//   connections: [
+//     { from: 'node1', to: 'node2', fromDot: 'right', toDot: 'left' }
+//   ],
+//   viewState: { scale: 1, translateX: 0, translateY: 0 }
+// }
+
+// Save to localStorage
+localStorage.setItem('topology', JSON.stringify(data));
+
+// Or send to server
+await fetch('/api/topology', {
+  method: 'POST',
+  body: JSON.stringify(data)
+});
+```
+
+#### `import(data, nodeFactory?)`
+
+Restore topology from exported data. Supports two modes:
+
+**Parameters:**
+
+- `data` (ExportData): Topology data returned by `export()`
+- `nodeFactory` (Function, optional): Factory function for creating DOM elements (native JS mode only)
+
+**Two Usage Modes:**
+
+1. **Framework Mode (Vue/React/etc.) - No nodeFactory**
+   - Framework handles DOM rendering
+   - Library finds elements by `id` attribute
+   - Use when nodes are managed by framework reactivity
+
+2. **Native JS Mode - With nodeFactory**
+   - Library calls factory to create DOM elements
+   - Library handles positioning and mounting
+   - Use for pure JavaScript applications
+
+**Returns:** Promise<void>
+
+**Example (Framework Mode - Vue):**
+
+```javascript
+// Save
+const data = connector.export();
+localStorage.setItem('topology', JSON.stringify(data));
+
+// Load
+const savedData = JSON.parse(localStorage.getItem('topology'));
+// 1. Update framework reactive state (triggers DOM rendering)
+nodes.value = savedData.nodes;
+// 2. Wait for DOM to be ready
+await nextTick();
+// 3. Import (library finds elements by id and restores connections)
+await connector.import(savedData);
+```
+
+**Example (Native JS Mode):**
+
+```javascript
+// Save
+const data = connector.export();
+localStorage.setItem('topology', JSON.stringify(data));
+
+// Load
+const savedData = JSON.parse(localStorage.getItem('topology'));
+await connector.import(savedData, (nodeData) => {
+  // Factory function: create and return DOM element
+  const el = document.createElement('div');
+  el.id = nodeData.id;
+  el.className = 'node';
+  el.textContent = nodeData.info?.name || nodeData.id;
+  el.style.position = 'absolute';
+  // Library will set left/top automatically
+  return el;
+});
+```
+
+**Note:** Connections are restored silently (without triggering `onConnect` callbacks) to avoid duplicate events during data restoration.
 
 
 ## 🎨 Usage Examples
@@ -745,6 +880,65 @@ const connector = new Connector({
 
     // Save view state to restore later
     saveViewState(viewState);
+  },
+
+  onNodeMove: ({ id, x, y }) => {
+    console.log("Node moved:", id, "to", x, y);
+    // Synchronize node position with your state management
+    // This prevents nodes from jumping back to original position after dragging
+    // In Vue: const node = nodes.value.find(n => n.id === id); if (node) { node.x = x; node.y = y; }
+    // In React: setNodes(nodes.map(n => n.id === id ? { ...n, x, y } : n));
+  },
+
+  onNodeSelect: (info) => {
+    if (info) {
+      console.log("Node selected:", info.id, info.info);
+    } else {
+      console.log("Node deselected");
+    }
+  },
+
+  onNodeDelete: ({ id, info }) => {
+    console.log("Node deleted:", id);
+    // Remove node from your state management
+    // In Vue: nodes.value = nodes.value.filter(n => n.id !== id);
+    // In React: setNodes(nodes.filter(n => n.id !== id));
+  }
+});
+```
+
+### Node Management
+
+#### Node Position Synchronization
+
+When using frameworks like Vue or React, you need to synchronize node positions after dragging to prevent nodes from jumping back to their original position. Use the `onNodeMove` callback:
+
+**Vue Example:**
+
+```javascript
+const connector = new Connector({
+  container: containerRef.value,
+  onNodeMove: ({ id, x, y }) => {
+    // Update Vue reactive state
+    const node = nodes.value.find(n => n.id === id);
+    if (node) {
+      node.x = x;
+      node.y = y;
+    }
+  }
+});
+```
+
+**React Example:**
+
+```javascript
+const connector = new Connector({
+  container: containerRef.current,
+  onNodeMove: ({ id, x, y }) => {
+    // Update React state
+    setNodes(prevNodes => 
+      prevNodes.map(n => n.id === id ? { ...n, x, y } : n)
+    );
   }
 });
 ```
@@ -775,6 +969,101 @@ connector.resetView(); // Reset to default (scale: 1, translateX: 0, translateY:
 // Update all connections (useful after manual node position changes)
 connector.updateAllConnections();
 ```
+
+### Save and Restore Topology
+
+The `export()` and `import()` methods allow you to save and restore the entire topology (nodes, connections, and view state).
+
+**Save Topology:**
+
+```javascript
+// Export current topology
+const data = connector.export();
+
+// Save to localStorage
+localStorage.setItem('topology', JSON.stringify(data));
+
+// Or save to server
+await fetch('/api/topology', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify(data)
+});
+```
+
+**Restore Topology (Framework Mode - Vue Example):**
+
+```vue
+<script setup>
+import { ref, onMounted, nextTick } from 'vue';
+import Connector from 'power-link';
+
+const containerRef = ref(null);
+const nodes = ref([]);
+let connector = null;
+
+const saveTopology = () => {
+  const data = connector.export();
+  // Merge custom fields (label, type, etc.) if needed
+  data.nodes = data.nodes.map(exportNode => {
+    const origin = nodes.value.find(n => n.id === exportNode.id);
+    return { ...exportNode, label: origin?.label, type: origin?.type };
+  });
+  localStorage.setItem('topology', JSON.stringify(data));
+};
+
+const loadTopology = async () => {
+  const saved = localStorage.getItem('topology');
+  if (saved) {
+    const data = JSON.parse(saved);
+    // 1. Update reactive state (triggers framework rendering)
+    nodes.value = data.nodes;
+    // 2. Wait for DOM to be ready
+    await nextTick();
+    // 3. Import (library finds elements by id and restores connections + view state)
+    await connector.import(data);
+  }
+};
+
+onMounted(() => {
+  connector = new Connector({ container: containerRef.value });
+  loadTopology();
+});
+</script>
+```
+
+**Restore Topology (Native JS Mode):**
+
+```javascript
+const loadTopology = async () => {
+  const saved = localStorage.getItem('topology');
+  if (saved) {
+    const data = JSON.parse(saved);
+    // Import with factory function
+    await connector.import(data, (nodeData) => {
+      const el = document.createElement('div');
+      el.id = nodeData.id;
+      el.className = 'node';
+      el.textContent = nodeData.info?.name || nodeData.id;
+      // Library will set position automatically
+      return el;
+    });
+  }
+};
+```
+
+**What's Included in Export:**
+
+- **Nodes**: ID, position (x, y), custom info, dot positions
+- **Connections**: Source/target nodes, dot positions
+- **View State**: Current zoom level and pan position (scale, translateX, translateY)
+
+**Benefits:**
+
+- ✅ Save/load entire graph state
+- ✅ Restore view position and zoom level
+- ✅ Preserve all node positions and connections
+- ✅ Works with any storage backend (localStorage, database, etc.)
 
 ## 🔧 Browser Support
 

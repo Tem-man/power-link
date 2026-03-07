@@ -96,12 +96,6 @@
   const showDropdown = ref(false);
   
   // Preset nodes configuration
-  //add node LLM
-  //add node Knowledge
-  //add node Search
-  //add node Database
-  //add node Output
-  //add node Input
   const presetNodes = [
     { type: 'task', label: 'Task Node', dotPositions: "both", style: 'node-primary', info: { name: 'Task', desc: 'A task node' } },
     { type: 'event', label: 'Event Node', dotPositions: "both", style: 'node-success', info: { name: 'Event', desc: 'An event node' } },

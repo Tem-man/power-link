@@ -7,12 +7,6 @@ A pure TypeScript visual node connector for creating draggable connections betwe
 
 ![Node Link Connector Demo](https://github.com/Tem-man/power-link/blob/main/public/images/screen-shot.png)
 
-### 📹 Demo Video
-
-<video width="100%" controls>
-  <source src="https://github.com/Tem-man/power-link/blob/main/public/images/video.mp4" type="video/mp4">
-  Your browser does not support the video tag.
-</video>
 
 **Watch the demo video** to see power-link in action! [Download video](https://github.com/Tem-man/node-link-utils/raw/main/packages/images/video.mp4)
 
@@ -156,9 +150,11 @@ Register a node for connection.
 - `options` (Object): Node configuration
   - `dotPositions` (String | Array): Connection dot positions
     - `'both'`: Both left and right dots
+    - `'left'`: Only left dot (string format)
+    - `'right'`: Only right dot (string format)
     - `['left', 'right']`: Array format, both sides
-    - `['left']`: Only left dot
-    - `['right']`: Only right dot
+    - `['left']`: Only left dot (array format)
+    - `['right']`: Only right dot (array format)
   - `info` (Object): Node extraneous information
 
 **Returns:** Node object
@@ -369,6 +365,104 @@ Update all connection line positions (useful when container size changes or afte
 ```javascript
 connector.updateAllConnections(); // Refresh all connection lines
 ```
+
+#### `export()`
+
+Export the current topology (nodes, connections, and view state) as a JSON object.
+
+**Returns:** ExportData object containing:
+- `nodes`: Array of node data (id, x, y, info, dotPositions)
+- `connections`: Array of connection data (from, to, fromDot, toDot)
+- `viewState`: Current view state (scale, translateX, translateY)
+
+**Example:**
+
+```javascript
+const data = connector.export();
+console.log(data);
+// {
+//   nodes: [
+//     { id: 'node1', x: 100, y: 100, info: {...}, dotPositions: ['right'] },
+//     { id: 'node2', x: 400, y: 100, info: {...}, dotPositions: ['left'] }
+//   ],
+//   connections: [
+//     { from: 'node1', to: 'node2', fromDot: 'right', toDot: 'left' }
+//   ],
+//   viewState: { scale: 1, translateX: 0, translateY: 0 }
+// }
+
+// Save to localStorage
+localStorage.setItem('topology', JSON.stringify(data));
+
+// Or send to server
+await fetch('/api/topology', {
+  method: 'POST',
+  body: JSON.stringify(data)
+});
+```
+
+#### `import(data, nodeFactory?)`
+
+Restore topology from exported data. Supports two modes:
+
+**Parameters:**
+
+- `data` (ExportData): Topology data returned by `export()`
+- `nodeFactory` (Function, optional): Factory function for creating DOM elements (native JS mode only)
+
+**Two Usage Modes:**
+
+1. **Framework Mode (Vue/React/etc.) - No nodeFactory**
+   - Framework handles DOM rendering
+   - Library finds elements by `id` attribute
+   - Use when nodes are managed by framework reactivity
+
+2. **Native JS Mode - With nodeFactory**
+   - Library calls factory to create DOM elements
+   - Library handles positioning and mounting
+   - Use for pure JavaScript applications
+
+**Returns:** Promise<void>
+
+**Example (Framework Mode - Vue):**
+
+```javascript
+// Save
+const data = connector.export();
+localStorage.setItem('topology', JSON.stringify(data));
+
+// Load
+const savedData = JSON.parse(localStorage.getItem('topology'));
+// 1. Update framework reactive state (triggers DOM rendering)
+nodes.value = savedData.nodes;
+// 2. Wait for DOM to be ready
+await nextTick();
+// 3. Import (library finds elements by id and restores connections)
+await connector.import(savedData);
+```
+
+**Example (Native JS Mode):**
+
+```javascript
+// Save
+const data = connector.export();
+localStorage.setItem('topology', JSON.stringify(data));
+
+// Load
+const savedData = JSON.parse(localStorage.getItem('topology'));
+await connector.import(savedData, (nodeData) => {
+  // Factory function: create and return DOM element
+  const el = document.createElement('div');
+  el.id = nodeData.id;
+  el.className = 'node';
+  el.textContent = nodeData.info?.name || nodeData.id;
+  el.style.position = 'absolute';
+  // Library will set left/top automatically
+  return el;
+});
+```
+
+**Note:** Connections are restored silently (without triggering `onConnect` callbacks) to avoid duplicate events during data restoration.
 
 
 ## 🎨 Usage Examples
@@ -780,6 +874,101 @@ connector.resetView(); // Reset to default (scale: 1, translateX: 0, translateY:
 connector.updateAllConnections();
 ```
 
+### Save and Restore Topology
+
+The `export()` and `import()` methods allow you to save and restore the entire topology (nodes, connections, and view state).
+
+**Save Topology:**
+
+```javascript
+// Export current topology
+const data = connector.export();
+
+// Save to localStorage
+localStorage.setItem('topology', JSON.stringify(data));
+
+// Or save to server
+await fetch('/api/topology', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify(data)
+});
+```
+
+**Restore Topology (Framework Mode - Vue Example):**
+
+```vue
+<script setup>
+import { ref, onMounted, nextTick } from 'vue';
+import Connector from 'power-link';
+
+const containerRef = ref(null);
+const nodes = ref([]);
+let connector = null;
+
+const saveTopology = () => {
+  const data = connector.export();
+  // Merge custom fields (label, type, etc.) if needed
+  data.nodes = data.nodes.map(exportNode => {
+    const origin = nodes.value.find(n => n.id === exportNode.id);
+    return { ...exportNode, label: origin?.label, type: origin?.type };
+  });
+  localStorage.setItem('topology', JSON.stringify(data));
+};
+
+const loadTopology = async () => {
+  const saved = localStorage.getItem('topology');
+  if (saved) {
+    const data = JSON.parse(saved);
+    // 1. Update reactive state (triggers framework rendering)
+    nodes.value = data.nodes;
+    // 2. Wait for DOM to be ready
+    await nextTick();
+    // 3. Import (library finds elements by id and restores connections + view state)
+    await connector.import(data);
+  }
+};
+
+onMounted(() => {
+  connector = new Connector({ container: containerRef.value });
+  loadTopology();
+});
+</script>
+```
+
+**Restore Topology (Native JS Mode):**
+
+```javascript
+const loadTopology = async () => {
+  const saved = localStorage.getItem('topology');
+  if (saved) {
+    const data = JSON.parse(saved);
+    // Import with factory function
+    await connector.import(data, (nodeData) => {
+      const el = document.createElement('div');
+      el.id = nodeData.id;
+      el.className = 'node';
+      el.textContent = nodeData.info?.name || nodeData.id;
+      // Library will set position automatically
+      return el;
+    });
+  }
+};
+```
+
+**What's Included in Export:**
+
+- **Nodes**: ID, position (x, y), custom info, dot positions
+- **Connections**: Source/target nodes, dot positions
+- **View State**: Current zoom level and pan position (scale, translateX, translateY)
+
+**Benefits:**
+
+- ✅ Save/load entire graph state
+- ✅ Restore view position and zoom level
+- ✅ Preserve all node positions and connections
+- ✅ Works with any storage backend (localStorage, database, etc.)
+
 ## 🔧 Browser Support
 
 - Chrome (latest)
@@ -791,18 +980,13 @@ connector.updateAllConnections();
 
 MIT License
 
+## 🌟 Show Your Support
+
+Give a ⭐️ on [GitHub](https://github.com/Tem-man/power-link) if this project helped you!
+
 ## 🤝 Contributing
-
-Contributions, issues and feature requests are welcome!
-
-## 📮 Support
 
 If you have any questions or need help, please open an issue on GitHub.
 
-## 🌟 Show Your Support
-
-Give a ⭐️ if this project helped you!
-
 ---
 
-Made with ❤️ by the power-link team
