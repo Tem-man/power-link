@@ -7,6 +7,8 @@ A pure TypeScript visual node connector for creating draggable connections betwe
 
 ![Node Link Connector Demo](https://github.com/Tem-man/power-link/blob/main/public/images/screen-shot.png)
 
+### online demo
+visit [online demo](https://tem-man.github.io/power-link)
 
 ## ✨ Features
 
