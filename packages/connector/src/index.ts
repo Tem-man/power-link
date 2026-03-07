@@ -24,4 +24,11 @@ export type {
   RegisterNodeOptions,
   SilentOptions,
   Dot,
+  NodeMoveInfo,
+  NodeSelectInfo,
+  NodeDeleteInfo,
+  ExportData,
+  ExportNodeData,
+  ExportConnectionData,
+  NodeFactory,
 } from './types';

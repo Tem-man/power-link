@@ -13,6 +13,8 @@ import type {
   RegisterNodeOptions,
   SilentOptions,
   Connection,
+  ExportData,
+  NodeFactory,
 } from './types';
 import { PositionHelper } from './PositionHelper';
 import { ViewManager } from './ViewManager';
@@ -50,6 +52,7 @@ export class Connector {
       minZoom: options.minZoom || 0.1,
       maxZoom: options.maxZoom || 4,
       zoomStep: options.zoomStep || 0.1,
+      selectedBorderColor: options.selectedBorderColor || options.lineColor || '#155BD4',
       ...options.config,
     };
 
@@ -69,6 +72,9 @@ export class Connector {
       onConnect: options.onConnect || (() => {}),
       onDisconnect: options.onDisconnect || (() => {}),
       onViewChange: options.onViewChange || (() => {}),
+      onNodeMove: options.onNodeMove || (() => {}),
+      onNodeSelect: options.onNodeSelect || (() => {}),
+      onNodeDelete: options.onNodeDelete || (() => {}),
     };
 
     // 初始化各子模块
@@ -106,16 +112,18 @@ export class Connector {
     container.style.overflow = 'hidden';
 
     // 创建内容包装器
+    // 设置足够大的尺寸（10000x10000），确保节点和连线即使拖到容器外部也不会被裁剪
     const contentWrapper = document.createElement('div');
     contentWrapper.className = 'connector-content-wrapper';
     contentWrapper.style.cssText = `
       position: absolute;
       top: 0;
       left: 0;
-      width: 100%;
-      height: 100%;
+      width: 10000px;
+      height: 10000px;
       transform-origin: 0 0;
       transition: none;
+      overflow: visible;
     `;
 
     // 将容器的所有子元素移到包装器中
@@ -128,20 +136,25 @@ export class Connector {
     this.ctx.contentWrapper = contentWrapper;
 
     // 创建 SVG 画布
+    // SVG 尺寸与 contentWrapper 一致，覆盖整个画布区域
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     svg.style.position = 'absolute';
     svg.style.top = '0';
     svg.style.left = '0';
-    svg.style.width = '100%';
-    svg.style.height = '100%';
+    svg.style.width = '10000px';
+    svg.style.height = '10000px';
     svg.style.pointerEvents = 'none';
     svg.style.zIndex = '1';
+    svg.style.overflow = 'visible';
     contentWrapper.appendChild(svg);
 
     this.ctx.svg = svg;
 
     // 初始化视图管理器（绑定缩放、平移、resize 事件）
     this.viewManager.init();
+
+    // 初始化节点管理器（绑定全局键盘与画布点击事件）
+    this.nodeManager.init();
   }
 
   // ==================== 节点 API ====================
@@ -165,6 +178,46 @@ export class Connector {
    */
   updateNodePosition(nodeId: string): void {
     this.nodeManager.updateNodePosition(nodeId);
+  }
+
+  /**
+   * 选中指定节点
+   * @param id - 节点 ID
+   */
+  selectNode(id: string): void {
+    const node = this.ctx.nodes.find((n) => n.id === id);
+    if (node) {
+      this.nodeManager.selectNode(node);
+    } else {
+      console.warn(`节点 ${id} 不存在`);
+    }
+  }
+
+  /**
+   * 取消选中当前节点
+   */
+  deselectNode(): void {
+    this.nodeManager.deselectNode();
+  }
+
+  /**
+   * 获取当前选中的节点信息
+   */
+  getSelectedNode(): ConnectorNode | null {
+    return this.nodeManager.getSelectedNode();
+  }
+
+  /**
+   * 删除指定节点（移除其连接与触点，触发 onNodeDelete 回调）
+   * @param id - 节点 ID
+   */
+  deleteNode(id: string): void {
+    const node = this.ctx.nodes.find((n) => n.id === id);
+    if (node) {
+      this.nodeManager.deleteNode(node);
+    } else {
+      console.warn(`节点 ${id} 不存在`);
+    }
   }
 
   // ==================== 连接 API ====================
@@ -224,6 +277,110 @@ export class Connector {
    */
   updateAllConnections(): void {
     this.connectionManager.updateAllConnections();
+  }
+
+  // ==================== 导入 / 导出 API ====================
+
+  /**
+   * 导出当前拓扑快照
+   * 返回所有节点（含坐标）、连接关系和视图状态的标准 JSON，可直接持久化
+   */
+  export(): ExportData {
+    return {
+      nodes: this.ctx.nodes.map((node) => ({
+        id: node.id,
+        x: node.x,
+        y: node.y,
+        info: node.info,
+        dotPositions: node.dotPositions,
+      })),
+      connections: this.ctx.connections.map((conn) => ({
+        from: conn.fromNode.id,
+        to: conn.toNode.id,
+        fromDot: conn.fromDot.position,
+        toDot: conn.toDot.position,
+      })),
+      viewState: this.getViewState(),
+    };
+  }
+
+  /**
+   * 从拓扑快照恢复节点与连接
+   *
+   * **两种使用模式：**
+   *
+   * 1. **框架模式（Vue / React 等）—— 不传 nodeFactory**
+   *    调用方负责将节点渲染到 DOM（使用框架响应式），等待渲染完成后再调用
+   *    `import(data)`，库会在 contentWrapper 内按 `id` 属性查找已存在的元素，
+   *    完成注册并还原连接。
+   *    ```js
+   *    nodes.value = data.nodes;        // 触发框架渲染
+   *    await nextTick();                // 等待 DOM 就绪
+   *    await connector.import(data);    // 注册 + 连线
+   *    ```
+   *
+   * 2. **原生 JS 模式 —— 传入 nodeFactory**
+   *    库调用工厂函数创建 DOM 元素，自动定位、挂载、注册，最后还原连接。
+   *    ```js
+   *    await connector.import(data, (nodeData) => {
+   *      const el = document.createElement('div');
+   *      el.className = 'node';
+   *      el.textContent = nodeData.info?.name ?? nodeData.id;
+   *      return el;
+   *    });
+   *    ```
+   *
+   * @param data       由 `export()` 返回的拓扑数据
+   * @param nodeFactory 可选，原生 JS 场景下的节点元素工厂
+   */
+  async import(data: ExportData, nodeFactory?: NodeFactory): Promise<void> {
+    // ── 第一步：注册节点 ──────────────────────────────────────
+    for (const nodeData of data.nodes) {
+      // 已注册的节点跳过（支持增量导入）
+      if (this.ctx.nodes.find((n) => n.id === nodeData.id)) continue;
+
+      let element: HTMLElement | null = null;
+
+      if (nodeFactory) {
+        // 原生模式：工厂创建元素，库负责定位与挂载
+        element = await Promise.resolve(nodeFactory(nodeData));
+        if (!element.id) element.id = nodeData.id;
+        element.style.position = 'absolute';
+        element.style.left = `${nodeData.x}px`;
+        element.style.top = `${nodeData.y}px`;
+        this.ctx.contentWrapper.appendChild(element);
+      } else {
+        // 框架模式：按 id 属性查找已由框架渲染的元素
+        element = this.ctx.contentWrapper.querySelector<HTMLElement>(
+          `[id="${nodeData.id}"]`,
+        );
+        if (element) {
+          // 用保存的坐标覆盖当前样式，确保位置精确还原
+          element.style.left = `${nodeData.x}px`;
+          element.style.top = `${nodeData.y}px`;
+        }
+      }
+
+      if (!element) {
+        console.warn(`[power-link] import: 找不到节点 "${nodeData.id}" 的 DOM 元素，已跳过`);
+        continue;
+      }
+
+      this.nodeManager.registerNode(nodeData.id, element, {
+        dotPositions: nodeData.dotPositions,
+        info: nodeData.info,
+      });
+    }
+
+    // ── 第二步：还原连接（静默模式，不触发 onConnect 回调）────
+    for (const conn of data.connections) {
+      this.createConnection(conn.from, conn.to, conn.fromDot, conn.toDot, { silent: true });
+    }
+
+    // ── 第三步：恢复视图状态（缩放、平移）────
+    if (data.viewState) {
+      this.setViewState(data.viewState);
+    }
   }
 
   // ==================== 视图 API ====================
@@ -305,4 +462,3 @@ export class Connector {
 }
 
 export default Connector;
-

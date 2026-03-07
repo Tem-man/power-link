@@ -13,6 +13,18 @@
 
 ## 🔧 准备工作
 
+### 切换镜像命令
+
+```bash
+npm config get registry
+
+官方命令
+npm config set registry https://registry.npmjs.org/
+
+淘宝命令
+npm config set registry https://registry.npmmirror.com/
+```
+
 ### 1. 注册 npm 账号
 
 如果还没有 npm 账号，访问 https://www.npmjs.com/ 注册。

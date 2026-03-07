@@ -1,6 +1,6 @@
 /**
  * @fileoverview 节点管理器
- * @description 负责节点注册、触点创建、节点拖拽、连线拖拽等
+ * @description 负责节点注册、触点创建、节点拖拽、连线拖拽、节点选中与删除等
  */
 
 import type {
@@ -9,6 +9,7 @@ import type {
   Dot,
   DotPosition,
   RegisterNodeOptions,
+  NodeMoveInfo,
 } from './types';
 import type { PositionHelper } from './PositionHelper';
 import type { ConnectionManager } from './ConnectionManager';
@@ -32,6 +33,15 @@ export class NodeManager {
   private isDraggingNode = false;
   private draggedNode: ConnectorNode | null = null;
   private dragOffset: { x: number; y: number } = { x: 0, y: 0 };
+
+  // 拖拽阈值检测（用于区分点击与拖拽）
+  private dragStartX = 0;
+  private dragStartY = 0;
+  private hasDragged = false;
+  private readonly DRAG_THRESHOLD = 3;
+
+  // 节点选中状态
+  private selectedNode: ConnectorNode | null = null;
 
   // 事件处理函数引用（箭头函数，用于移除监听）
   private handleMouseMove = (e: MouseEvent): void => {
@@ -78,6 +88,18 @@ export class NodeManager {
   private handleNodeDragMove = (e: MouseEvent): void => {
     if (!this.isDraggingNode || !this.draggedNode) return;
 
+    // 判断是否超过拖拽阈值
+    if (!this.hasDragged) {
+      const dx = Math.abs(e.clientX - this.dragStartX);
+      const dy = Math.abs(e.clientY - this.dragStartY);
+      if (dx > this.DRAG_THRESHOLD || dy > this.DRAG_THRESHOLD) {
+        this.hasDragged = true;
+      }
+    }
+
+    // 未达到拖拽阈值时不移动节点（避免误操作）
+    if (!this.hasDragged) return;
+
     const wrapperRect = this.ctx.contentWrapper.getBoundingClientRect();
     const { scale } = this.ctx.viewState;
 
@@ -85,21 +107,54 @@ export class NodeManager {
     const newX = (e.clientX - wrapperRect.left) / scale - this.dragOffset.x;
     const newY = (e.clientY - wrapperRect.top) / scale - this.dragOffset.y;
 
-    // 更新节点位置
+    // 更新节点位置（DOM + 内部状态同步）
     this.draggedNode.element.style.left = `${newX}px`;
     this.draggedNode.element.style.top = `${newY}px`;
+    this.draggedNode.x = newX;
+    this.draggedNode.y = newY;
+
+    // 触发节点移动回调，通知外部同步位置
+    const moveInfo: NodeMoveInfo = { id: this.draggedNode.id, x: newX, y: newY };
+    this.ctx.onNodeMove(moveInfo);
 
     // 更新所有与该节点相关的连线
     this.connectionManager.updateNodeConnections(this.draggedNode.id);
   };
 
   private handleNodeDragEnd = (): void => {
+    // 如果鼠标松开时没有发生拖拽，则视为点击 → 选中节点
+    if (!this.hasDragged && this.draggedNode) {
+      this.selectNode(this.draggedNode);
+    }
+
     this.isDraggingNode = false;
     this.viewManager.isDraggingNode = false;
     this.draggedNode = null;
+    this.hasDragged = false;
 
     document.removeEventListener('mousemove', this.handleNodeDragMove);
     document.removeEventListener('mouseup', this.handleNodeDragEnd);
+  };
+
+  /** 全局 keydown：按 Delete/Backspace 删除已选中的节点 */
+  private handleKeyDown = (e: KeyboardEvent): void => {
+    if (e.key !== 'Delete' && e.key !== 'Backspace') return;
+    if (!this.selectedNode) return;
+
+    // 若焦点在输入框内，不拦截
+    const target = e.target as HTMLElement;
+    const tag = target.tagName.toLowerCase();
+    if (tag === 'input' || tag === 'textarea' || target.isContentEditable) return;
+
+    this.deleteNode(this.selectedNode);
+  };
+
+  /** 点击画布空白区域时取消选中（节点的 mousedown stopPropagation，不会触发此处） */
+  private handleContainerMouseDown = (e: MouseEvent): void => {
+    const target = e.target as HTMLElement;
+    // 点击连线删除按钮时不取消选中
+    if (target.closest && target.closest('.connector-delete-btn')) return;
+    this.deselectNode();
   };
 
   constructor(ctx: ConnectorContext, positionHelper: PositionHelper) {
@@ -118,6 +173,15 @@ export class NodeManager {
     this.connectionManager = connectionManager;
     this.snapManager = snapManager;
     this.viewManager = viewManager;
+  }
+
+  /**
+   * 初始化：绑定全局键盘监听和画布点击取消选中
+   * 由 Connector 主类在 DOM 准备好后调用
+   */
+  init(): void {
+    document.addEventListener('keydown', this.handleKeyDown);
+    this.ctx.container.addEventListener('mousedown', this.handleContainerMouseDown);
   }
 
   // ==================== 节点注册 ====================
@@ -148,6 +212,9 @@ export class NodeManager {
       dotPositions = options.dotPositions.filter(
         (pos): pos is DotPosition => pos === 'left' || pos === 'right',
       );
+    } else if (options.dotPositions === 'left' || options.dotPositions === 'right') {
+      // 明确指定单侧触点字符串
+      dotPositions = [options.dotPositions];
     } else {
       // 默认：第一个节点右侧，其他节点左侧
       dotPositions = [this.ctx.nodes.length === 0 ? 'right' : 'left'];
@@ -167,6 +234,10 @@ export class NodeManager {
       };
     });
 
+    // 从元素的 style 读取初始坐标（由调用方通过 style.left/top 设置）
+    const x = parseFloat(element.style.left) || 0;
+    const y = parseFloat(element.style.top) || 0;
+
     const node: ConnectorNode = {
       id,
       element,
@@ -174,6 +245,8 @@ export class NodeManager {
       dots,
       dotPositions,
       connections: [],
+      x,
+      y,
     };
 
     this.ctx.nodes.push(node);
@@ -185,9 +258,12 @@ export class NodeManager {
       }
     });
 
-    // 绑定节点拖拽事件
+    // 绑定节点拖拽事件（包含点击选中逻辑）
     if (this.ctx.config.enableNodeDrag) {
       this.bindNodeDragEvents(node);
+    } else {
+      // 禁用拖拽时，单独绑定点击选中
+      this.bindNodeClickEvents(node);
     }
 
     return node;
@@ -268,7 +344,7 @@ export class NodeManager {
   }
 
   /**
-   * 绑定节点拖拽事件
+   * 绑定节点拖拽事件（同时包含点击选中逻辑）
    */
   private bindNodeDragEvents(node: ConnectorNode): void {
     const { element } = node;
@@ -285,6 +361,11 @@ export class NodeManager {
       this.isDraggingNode = true;
       this.viewManager.isDraggingNode = true;
       this.draggedNode = node;
+
+      // 记录拖拽起点，用于区分点击与拖拽
+      this.dragStartX = e.clientX;
+      this.dragStartY = e.clientY;
+      this.hasDragged = false;
 
       const rect = element.getBoundingClientRect();
       const wrapperRect = this.ctx.contentWrapper.getBoundingClientRect();
@@ -309,6 +390,100 @@ export class NodeManager {
       document.addEventListener('mousemove', this.handleNodeDragMove);
       document.addEventListener('mouseup', this.handleNodeDragEnd);
     });
+  }
+
+  /**
+   * 禁用拖拽时，单独绑定点击选中事件
+   */
+  private bindNodeClickEvents(node: ConnectorNode): void {
+    node.element.addEventListener('click', (e: MouseEvent) => {
+      if ((e.target as HTMLElement).classList.contains('connector-dot')) return;
+      e.stopPropagation();
+      this.selectNode(node);
+    });
+  }
+
+  // ==================== 节点选中 ====================
+
+  /**
+   * 选中节点，应用高亮样式并触发回调
+   */
+  selectNode(node: ConnectorNode): void {
+    // 取消上一个选中
+    if (this.selectedNode && this.selectedNode.id !== node.id) {
+      this.removeSelectedStyle(this.selectedNode.element);
+    }
+
+    this.selectedNode = node;
+    this.applySelectedStyle(node.element);
+
+    this.ctx.onNodeSelect({ id: node.id, info: node.info });
+  }
+
+  /**
+   * 取消选中当前节点
+   */
+  deselectNode(): void {
+    if (!this.selectedNode) return;
+    this.removeSelectedStyle(this.selectedNode.element);
+    this.selectedNode = null;
+    this.ctx.onNodeSelect(null);
+  }
+
+  /**
+   * 获取当前选中的节点
+   */
+  getSelectedNode(): ConnectorNode | null {
+    return this.selectedNode;
+  }
+
+  /** 应用选中高亮样式 */
+  private applySelectedStyle(element: HTMLElement): void {
+    const color = this.ctx.config.selectedBorderColor;
+    element.style.outline = `2px solid ${color}`;
+    element.style.outlineOffset = '2px';
+    element.style.boxShadow = `0 0 0 4px ${color}33`;
+  }
+
+  /** 移除选中高亮样式 */
+  private removeSelectedStyle(element: HTMLElement): void {
+    element.style.outline = '';
+    element.style.outlineOffset = '';
+    element.style.boxShadow = '';
+  }
+
+  // ==================== 节点删除 ====================
+
+  /**
+   * 删除节点：移除其所有连接和触点，并从节点列表中移除
+   * 注意：不会主动从 DOM 移除节点元素本身，由框架层（如 Vue/React）在 onNodeDelete 回调中处理
+   */
+  deleteNode(node: ConnectorNode): void {
+    // 1. 断开该节点的所有连接
+    const connectionIds = node.connections.map((c) => c.id);
+    connectionIds.forEach((id) => this.connectionManager.disconnect(id, { silent: false }));
+
+    // 2. 移除节点上的触点 DOM 元素
+    Object.values(node.dots).forEach((dot) => {
+      if (dot && dot.element && dot.element.parentNode) {
+        dot.element.parentNode.removeChild(dot.element);
+      }
+    });
+
+    // 3. 移除选中高亮（如果是当前选中节点）
+    if (this.selectedNode && this.selectedNode.id === node.id) {
+      this.removeSelectedStyle(node.element);
+      this.selectedNode = null;
+    }
+
+    // 4. 从节点列表中移除
+    const index = this.ctx.nodes.findIndex((n) => n.id === node.id);
+    if (index !== -1) {
+      this.ctx.nodes.splice(index, 1);
+    }
+
+    // 5. 触发删除回调（框架层在此回调中移除 DOM 节点）
+    this.ctx.onNodeDelete({ id: node.id, info: node.info });
   }
 
   // ==================== 临时连线 ====================
@@ -382,6 +557,10 @@ export class NodeManager {
    * 销毁节点管理器，移除事件监听和触点元素
    */
   destroy(): void {
+    // 移除全局事件监听
+    document.removeEventListener('keydown', this.handleKeyDown);
+    this.ctx.container.removeEventListener('mousedown', this.handleContainerMouseDown);
+
     // 移除所有连接点
     this.ctx.nodes.forEach((node) => {
       if (node.dots) {
@@ -400,4 +579,3 @@ export class NodeManager {
     document.removeEventListener('mouseup', this.handleNodeDragEnd);
   }
 }
-

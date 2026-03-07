@@ -1,7 +1,14 @@
 {
   "name": "power-link",
-  "version": "1.0.2",
-  "description": "Shared utility functions",
+  "version": "1.0.12",
+  "description": "A pure TypeScript visual node connector for creating draggable connections between nodes. Framework-agnostic and easy to use",
+  "author": "Lin Jiman <temman_lin@qq.com>",
+  "license": "MIT",
+  "homepage": "https://github.com/Tem-man/power-link",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Tem-man/power-link.git"
+  },
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",

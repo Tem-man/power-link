@@ -158,8 +158,16 @@ export class ConnectionManager {
         connection.fromDot.position,
         connection.toDot.position,
       );
-      connection.deleteButton.style.left = `${midPoint.x - this.ctx.config.deleteButtonSize / 2}px`;
-      connection.deleteButton.style.top = `${midPoint.y - this.ctx.config.deleteButtonSize / 2}px`;
+      const radius = this.ctx.config.deleteButtonSize / 2;
+      // 使用 SVG transform 定位，保持原有 transform scale（如果有）
+      const currentTransform = connection.deleteButton.getAttribute('transform') || '';
+      const scaleMatch = currentTransform.match(/scale\(([^)]+)\)/);
+      const scale = scaleMatch ? scaleMatch[1] : '1';
+      // 设置 translate 和 scale，scale 用于悬浮放大效果
+      connection.deleteButton.setAttribute(
+        'transform',
+        `translate(${midPoint.x - radius}, ${midPoint.y - radius}) scale(${scale})`,
+      );
     }
   }
 
@@ -363,42 +371,62 @@ export class ConnectionManager {
   // ==================== UI 元素 ====================
 
   /**
-   * 创建删除按钮
+   * 创建删除按钮（使用 SVG 渲染）
    */
-  private createDeleteButton(): HTMLDivElement {
-    const deleteButton = document.createElement('div');
-    deleteButton.className = 'connector-delete-btn';
-    deleteButton.innerHTML = '×';
-    deleteButton.style.cssText = `
-      position: absolute;
-      width: ${this.ctx.config.deleteButtonSize}px;
-      height: ${this.ctx.config.deleteButtonSize}px;
-      background-color: #ff4d4f;
-      color: white;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      font-size: 16px;
-      font-weight: bold;
-      z-index: 100;
-      opacity: 0;
-      transition: opacity 0.2s, transform 0.2s;
-      pointer-events: none;
-    `;
+  private createDeleteButton(): SVGGElement {
+    const size = this.ctx.config.deleteButtonSize;
+    const radius = size / 2;
 
-    // 将删除按钮添加到 contentWrapper 内，使其跟随变换
-    this.ctx.contentWrapper.appendChild(deleteButton);
+    // 创建 SVG Group 作为容器
+    const deleteButton = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    deleteButton.setAttribute('class', 'connector-delete-btn');
+    deleteButton.setAttribute('opacity', '0');
+    deleteButton.setAttribute('style', 'cursor: pointer; pointer-events: none;');
+    deleteButton.setAttribute('transform-origin', `${radius}px ${radius}px`);
 
+    // 创建圆形背景
+    const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    circle.setAttribute('cx', String(radius));
+    circle.setAttribute('cy', String(radius));
+    circle.setAttribute('r', String(radius));
+    circle.setAttribute('fill', '#ff4d4f');
+    deleteButton.appendChild(circle);
+
+    // 使用 SVG path 绘制 × 符号（两条交叉的线）
+    // × 符号长度约为半径的 35%，与圆边保持约 65% 的间隔，确保美观
+    // 两条对角线都经过圆心 (radius, radius)，确保完美居中
+    const xLength = radius * 0.32;
+    const xPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    // 第一条对角线：从左上 (radius - xLength, radius - xLength) 到右下 (radius + xLength, radius + xLength)
+    // 第二条对角线：从右上 (radius + xLength, radius - xLength) 到左下 (radius - xLength, radius + xLength)
+    // 两条线在圆心 (radius, radius) 处交叉，确保 × 符号完美居中
+    xPath.setAttribute(
+      'd',
+      `M ${radius - xLength} ${radius - xLength} L ${radius + xLength} ${radius + xLength} M ${radius + xLength} ${radius - xLength} L ${radius - xLength} ${radius + xLength}`,
+    );
+    xPath.setAttribute('stroke', 'white');
+    xPath.setAttribute('stroke-width', '1.8');
+    xPath.setAttribute('stroke-linecap', 'round');
+    xPath.setAttribute('fill', 'none');
+    xPath.setAttribute('pointer-events', 'none');
+    deleteButton.appendChild(xPath);
+
+    // 将删除按钮添加到 SVG 内
+    this.ctx.svg.appendChild(deleteButton);
+
+    // 悬浮放大效果（仅处理放大，不处理显示/隐藏）
     deleteButton.addEventListener('mouseenter', () => {
-      deleteButton.style.transform = 'scale(1.2)';
+      const currentTransform = deleteButton.getAttribute('transform') || '';
+      const translateMatch = currentTransform.match(/translate\(([^)]+)\)/);
+      const translate = translateMatch ? translateMatch[1] : '0, 0';
+      deleteButton.setAttribute('transform', `translate(${translate}) scale(1.2)`);
     });
 
     deleteButton.addEventListener('mouseleave', () => {
-      deleteButton.style.transform = 'scale(1)';
-      deleteButton.style.opacity = '0';
-      deleteButton.style.pointerEvents = 'none';
+      const currentTransform = deleteButton.getAttribute('transform') || '';
+      const translateMatch = currentTransform.match(/translate\(([^)]+)\)/);
+      const translate = translateMatch ? translateMatch[1] : '0, 0';
+      deleteButton.setAttribute('transform', `translate(${translate}) scale(1)`);
     });
 
     return deleteButton;
@@ -428,19 +456,41 @@ export class ConnectionManager {
 
     connection.hoverPath = hoverPath;
 
+    let hideTimer: ReturnType<typeof setTimeout> | null = null;
+    let isButtonHovered = false;
+
     const showDeleteButton = () => {
-      deleteButton.style.opacity = '1';
-      deleteButton.style.pointerEvents = 'auto';
+      if (hideTimer) {
+        clearTimeout(hideTimer);
+        hideTimer = null;
+      }
+      deleteButton.setAttribute('opacity', '1');
+      deleteButton.setAttribute('style', 'cursor: pointer; pointer-events: auto;');
     };
 
     const hideDeleteButton = () => {
-      setTimeout(() => {
-        if (!deleteButton.matches(':hover')) {
-          deleteButton.style.opacity = '0';
-          deleteButton.style.pointerEvents = 'none';
+      hideTimer = setTimeout(() => {
+        if (!isButtonHovered) {
+          deleteButton.setAttribute('opacity', '0');
+          deleteButton.setAttribute('style', 'cursor: pointer; pointer-events: none;');
         }
+        hideTimer = null;
       }, 100);
     };
+
+    // 监听按钮自身的悬浮状态
+    deleteButton.addEventListener('mouseenter', () => {
+      isButtonHovered = true;
+      if (hideTimer) {
+        clearTimeout(hideTimer);
+        hideTimer = null;
+      }
+    });
+
+    deleteButton.addEventListener('mouseleave', () => {
+      isButtonHovered = false;
+      hideDeleteButton();
+    });
 
     hoverPath.addEventListener('mouseenter', showDeleteButton);
     hoverPath.addEventListener('mouseleave', hideDeleteButton);

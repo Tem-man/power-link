@@ -7,12 +7,6 @@ A pure TypeScript visual node connector for creating draggable connections betwe
 
 ![Node Link Connector Demo](https://github.com/Tem-man/power-link/blob/main/public/images/screen-shot.png)
 
-### 📹 Demo Video
-
-<video width="100%" controls>
-  <source src="https://github.com/Tem-man/power-link/blob/main/public/images/video.mp4" type="video/mp4">
-  Your browser does not support the video tag.
-</video>
 
 **Watch the demo video** to see power-link in action! [Download video](https://github.com/Tem-man/node-link-utils/raw/main/packages/images/video.mp4)
 
@@ -156,9 +150,11 @@ Register a node for connection.
 - `options` (Object): Node configuration
   - `dotPositions` (String | Array): Connection dot positions
     - `'both'`: Both left and right dots
+    - `'left'`: Only left dot (string format)
+    - `'right'`: Only right dot (string format)
     - `['left', 'right']`: Array format, both sides
-    - `['left']`: Only left dot
-    - `['right']`: Only right dot
+    - `['left']`: Only left dot (array format)
+    - `['right']`: Only right dot (array format)
   - `info` (Object): Node extraneous information
 
 **Returns:** Node object
