@@ -240,6 +240,7 @@ export class NodeManager {
 
     const node: ConnectorNode = {
       id,
+      label: options.label,
       element,
       info: options.info,
       dots,

@@ -289,6 +289,7 @@ export class Connector {
     return {
       nodes: this.ctx.nodes.map((node) => ({
         id: node.id,
+        label: node.label,
         x: node.x,
         y: node.y,
         info: node.info,
@@ -296,7 +297,11 @@ export class Connector {
       })),
       connections: this.ctx.connections.map((conn) => ({
         from: conn.fromNode.id,
+        fromLabel: conn.fromNode.label,
+        fromInfo: conn.fromNode.info,
         to: conn.toNode.id,
+        toLabel: conn.toNode.label,
+        toInfo: conn.toNode.info,
         fromDot: conn.fromDot.position,
         toDot: conn.toDot.position,
       })),

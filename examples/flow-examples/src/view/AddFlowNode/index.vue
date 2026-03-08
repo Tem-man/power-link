@@ -161,7 +161,7 @@
 
     const el = nodeRefs.get(id);
     if (el && connector) {
-      connector.registerNode(id, el, newNode.options);
+      connector.registerNode(id, el, { ...newNode.options, label: newNode.label });
     }
   };
 
@@ -170,10 +170,10 @@
 
     // export() 内部已维护节点坐标，无需手动从 DOM 反查
     const data = connector.export();
-    // 保留业务自定义字段（label / type / options 等）
+    // 保留业务自定义字段（type / options 等，label 已由 export() 原生返回）
     data.nodes = data.nodes.map(exportNode => {
       const origin = nodes.value.find(n => n.id === exportNode.id);
-      return { ...exportNode, label: origin?.label, type: origin?.type, options: origin?.options };
+      return { ...exportNode, type: origin?.type, options: origin?.options };
     });
 
     localStorage.setItem('flowData', JSON.stringify(data));
@@ -203,7 +203,7 @@
       // 无存储数据，注册初始默认节点
       nodes.value.forEach(node => {
         const el = nodeRefs.get(node.id);
-        if (el) connector.registerNode(node.id, el, node.options);
+        if (el) connector.registerNode(node.id, el, { ...node.options, label: node.label });
       });
     }
   };

@@ -32,6 +32,8 @@ export interface Dot {
 /** 节点对象 */
 export interface ConnectorNode {
   id: string;
+  /** 节点名称 */
+  label?: string;
   element: HTMLElement;
   info?: Record<string, unknown>;
   dots: Partial<Record<DotPosition, Dot>>;
@@ -125,6 +127,8 @@ export interface ConnectorOptions extends Partial<ConnectorConfig> {
 
 /** 节点注册选项 */
 export interface RegisterNodeOptions {
+  /** 节点名称 */
+  label?: string;
   info?: Record<string, unknown>;
   dotPositions?: 'both' | DotPosition | DotPosition[];
 }
@@ -139,6 +143,8 @@ export interface SilentOptions {
 /** 导出的单个节点数据 */
 export interface ExportNodeData {
   id: string;
+  /** 节点名称 */
+  label?: string;
   x: number;
   y: number;
   info?: Record<string, unknown>;
@@ -148,7 +154,15 @@ export interface ExportNodeData {
 /** 导出的单条连接数据 */
 export interface ExportConnectionData {
   from: string;
+  /** from 节点名称 */
+  fromLabel?: string;
+  /** from 节点附加信息 */
+  fromInfo?: Record<string, unknown>;
   to: string;
+  /** to 节点名称 */
+  toLabel?: string;
+  /** to 节点附加信息 */
+  toInfo?: Record<string, unknown>;
   fromDot: DotPosition;
   toDot: DotPosition;
 }
