@@ -27,6 +27,8 @@ export type {
   NodeMoveInfo,
   NodeSelectInfo,
   NodeDeleteInfo,
+  NodeContextMenuInfo,
+  CanvasContextMenuInfo,
   ExportData,
   ExportNodeData,
   ExportConnectionData,

@@ -21,6 +21,8 @@ visit [online demo](https://tem-man.github.io/power-link)
 - 📦 **Zero Dependencies** - Pure JavaScript, no framework required
 - 🎭 **Multiple Connection Points** - Support for left and right connection dots
 - 🔌 **Event Callbacks** - Listen to connection and disconnection events
+- 🖱️ **Context Menu Hooks** - `onNodeContextMenu` and `onCanvasContextMenu` for custom right-click menus
+- 📐 **Coordinate Conversion** - `clientToCanvas()` for converting viewport coordinates to canvas space
 
 ## 📦 Installation
 
@@ -145,6 +147,8 @@ connector.registerNode("node2", node2, {
 | `onNodeMove`       | Function    | `() => {}`   | Callback when a node is dragged (receives `{ id, x, y }`) |
 | `onNodeSelect`     | Function    | `() => {}`   | Callback when a node is selected/deselected (receives node info or `null`) |
 | `onNodeDelete`     | Function    | `() => {}`   | Callback when a node is deleted (receives `{ id, info }`) |
+| `onNodeContextMenu` | Function   | -            | Callback when right-clicking a node (receives `{ id, info, clientX, clientY }`). Library auto prevents default menu. |
+| `onCanvasContextMenu` | Function | -            | Callback when right-clicking empty canvas (receives `{ clientX, clientY, canvasX, canvasY }`). `canvasX/Y` are pre-converted coordinates. |
 
 ### Methods
 
@@ -336,6 +340,37 @@ Get the current view state.
 ```javascript
 const viewState = connector.getViewState();
 console.log(viewState); // { scale: 1, translateX: 0, translateY: 0 }
+```
+
+#### `clientToCanvas(clientX, clientY)`
+
+Convert viewport (client) coordinates to canvas (contentWrapper) coordinates. Automatically accounts for current zoom and pan.
+
+Useful for: pasting nodes at cursor position, positioning tooltips, handling external drag-and-drop, etc.
+
+**Parameters:**
+
+- `clientX` (Number): X coordinate in viewport (e.g. `MouseEvent.clientX`)
+- `clientY` (Number): Y coordinate in viewport (e.g. `MouseEvent.clientY`)
+
+**Returns:** `{ x, y }` - Canvas coordinates
+
+**Example:**
+
+```javascript
+// Paste node at mouse cursor position
+canvas.addEventListener('click', (e) => {
+  const pos = connector.clientToCanvas(e.clientX, e.clientY);
+  addNodeAt(pos.x, pos.y);
+});
+
+// Or with Ctrl+V paste
+document.addEventListener('keydown', (e) => {
+  if (e.ctrlKey && e.key === 'v') {
+    const pos = connector.clientToCanvas(lastMouseX, lastMouseY);
+    pasteNode(pos.x, pos.y);
+  }
+});
 ```
 
 #### `setZoom(scale)`
@@ -914,6 +949,20 @@ const connector = new Connector({
     // Remove node from your state management
     // In Vue: nodes.value = nodes.value.filter(n => n.id !== id);
     // In React: setNodes(nodes.filter(n => n.id !== id));
+  },
+
+  // Right-click on a node - show custom context menu
+  onNodeContextMenu: ({ id, info, clientX, clientY }) => {
+    console.log("Node right-clicked:", id, "at", clientX, clientY);
+    // Show your custom menu at (clientX, clientY)
+    // e.g. showContextMenu(clientX, clientY, { id, info });
+  },
+
+  // Right-click on empty canvas - e.g. paste menu
+  onCanvasContextMenu: ({ clientX, clientY, canvasX, canvasY }) => {
+    console.log("Canvas right-clicked at", clientX, clientY, "→ canvas", canvasX, canvasY);
+    // canvasX/Y are pre-converted for paste position, tooltip placement, etc.
+    // e.g. showPasteMenu(clientX, clientY, { x: canvasX, y: canvasY });
   }
 });
 ```

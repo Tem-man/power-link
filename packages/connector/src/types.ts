@@ -111,6 +111,30 @@ export interface NodeDeleteInfo {
   info?: Record<string, unknown>;
 }
 
+/** 节点右键菜单信息 */
+export interface NodeContextMenuInfo {
+  /** 被右键的节点 id */
+  id: string;
+  /** 节点附加信息 */
+  info?: Record<string, unknown>;
+  /** 鼠标在视口中的 X 坐标 */
+  clientX: number;
+  /** 鼠标在视口中的 Y 坐标 */
+  clientY: number;
+}
+
+/** 画布空白区域右键菜单信息 */
+export interface CanvasContextMenuInfo {
+  /** 鼠标在视口中的 X 坐标 */
+  clientX: number;
+  /** 鼠标在视口中的 Y 坐标 */
+  clientY: number;
+  /** 鼠标对应的画布（contentWrapper）X 坐标（已换算缩放/平移） */
+  canvasX: number;
+  /** 鼠标对应的画布（contentWrapper）Y 坐标（已换算缩放/平移） */
+  canvasY: number;
+}
+
 /** 构造函数选项 */
 export interface ConnectorOptions extends Partial<ConnectorConfig> {
   container: HTMLElement;
@@ -122,6 +146,16 @@ export interface ConnectorOptions extends Partial<ConnectorConfig> {
   onNodeSelect?: (info: NodeSelectInfo | null) => void;
   /** 节点被删除时触发 */
   onNodeDelete?: (info: NodeDeleteInfo) => void;
+  /**
+   * 右键单击某个节点时触发。
+   * 库会自动 preventDefault + stopPropagation，用户只需响应回调渲染自定义菜单。
+   */
+  onNodeContextMenu?: (info: NodeContextMenuInfo) => void;
+  /**
+   * 右键单击画布空白区域时触发（节点上的右键不会冒泡到此）。
+   * info 中同时提供视口坐标（clientX/Y）和已换算的画布坐标（canvasX/Y）。
+   */
+  onCanvasContextMenu?: (info: CanvasContextMenuInfo) => void;
   config?: Partial<ConnectorConfig>;
 }
 
@@ -216,4 +250,8 @@ export interface ConnectorContext {
   onNodeSelect: (info: NodeSelectInfo | null) => void;
   /** 节点删除回调 */
   onNodeDelete: (info: NodeDeleteInfo) => void;
+  /** 节点右键菜单回调（可选） */
+  onNodeContextMenu?: (info: NodeContextMenuInfo) => void;
+  /** 画布空白区域右键菜单回调（可选） */
+  onCanvasContextMenu?: (info: CanvasContextMenuInfo) => void;
 }

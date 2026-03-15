@@ -75,6 +75,8 @@ export class Connector {
       onNodeMove: options.onNodeMove || (() => {}),
       onNodeSelect: options.onNodeSelect || (() => {}),
       onNodeDelete: options.onNodeDelete || (() => {}),
+      onNodeContextMenu: options.onNodeContextMenu,
+      onCanvasContextMenu: options.onCanvasContextMenu,
     };
 
     // 初始化各子模块
@@ -384,6 +386,33 @@ export class Connector {
     if (data.viewState) {
       this.setViewState(data.viewState);
     }
+  }
+
+  // ==================== 坐标工具 API ====================
+
+  /**
+   * 将视口（client）坐标转换为画布（contentWrapper）坐标
+   *
+   * 已自动计算当前缩放比例与平移量，可在任何需要把屏幕位置映射到画布的场景中使用：
+   * 粘贴节点、从外部拖入元素、定位自定义 tooltip 等。
+   *
+   * @param clientX - 鼠标/触点在视口中的 X 坐标（如 MouseEvent.clientX）
+   * @param clientY - 鼠标/触点在视口中的 Y 坐标（如 MouseEvent.clientY）
+   * @returns 对应的画布坐标 `{ x, y }`
+   *
+   * @example
+   * canvas.addEventListener('click', (e) => {
+   *   const pos = connector.clientToCanvas(e.clientX, e.clientY);
+   *   console.log('Canvas position:', pos.x, pos.y);
+   * });
+   */
+  clientToCanvas(clientX: number, clientY: number): { x: number; y: number } {
+    const rect = this.ctx.container.getBoundingClientRect();
+    const { scale, translateX, translateY } = this.ctx.viewState;
+    return {
+      x: (clientX - rect.left - translateX) / scale,
+      y: (clientY - rect.top - translateY) / scale,
+    };
   }
 
   // ==================== 视图 API ====================

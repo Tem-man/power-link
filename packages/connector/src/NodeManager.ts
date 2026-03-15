@@ -10,6 +10,8 @@ import type {
   DotPosition,
   RegisterNodeOptions,
   NodeMoveInfo,
+  NodeContextMenuInfo,
+  CanvasContextMenuInfo,
 } from './types';
 import type { PositionHelper } from './PositionHelper';
 import type { ConnectionManager } from './ConnectionManager';
@@ -157,6 +159,24 @@ export class NodeManager {
     this.deselectNode();
   };
 
+  /**
+   * 画布空白区域右键：节点的 contextmenu 会 stopPropagation，
+   * 因此只有点击空白处时此处才会触发
+   */
+  private handleContainerContextMenu = (e: MouseEvent): void => {
+    if (!this.ctx.onCanvasContextMenu) return;
+    e.preventDefault();
+    const rect = this.ctx.container.getBoundingClientRect();
+    const { scale, translateX, translateY } = this.ctx.viewState;
+    const info: CanvasContextMenuInfo = {
+      clientX: e.clientX,
+      clientY: e.clientY,
+      canvasX: (e.clientX - rect.left - translateX) / scale,
+      canvasY: (e.clientY - rect.top - translateY) / scale,
+    };
+    this.ctx.onCanvasContextMenu(info);
+  };
+
   constructor(ctx: ConnectorContext, positionHelper: PositionHelper) {
     this.ctx = ctx;
     this.positionHelper = positionHelper;
@@ -182,6 +202,7 @@ export class NodeManager {
   init(): void {
     document.addEventListener('keydown', this.handleKeyDown);
     this.ctx.container.addEventListener('mousedown', this.handleContainerMouseDown);
+    this.ctx.container.addEventListener('contextmenu', this.handleContainerContextMenu);
   }
 
   // ==================== 节点注册 ====================
@@ -267,6 +288,9 @@ export class NodeManager {
       this.bindNodeClickEvents(node);
     }
 
+    // 绑定节点右键菜单事件（始终挂载，回调不存在时为空操作）
+    this.bindNodeContextMenuEvents(node);
+
     return node;
   }
 
@@ -341,6 +365,25 @@ export class NodeManager {
       // 绑定移动和释放事件
       document.addEventListener('mousemove', this.handleMouseMove);
       document.addEventListener('mouseup', this.handleMouseUp);
+    });
+  }
+
+  /**
+   * 绑定节点右键菜单事件
+   * 仅在用户提供 onNodeContextMenu 回调时拦截事件，否则不干预浏览器默认行为
+   */
+  private bindNodeContextMenuEvents(node: ConnectorNode): void {
+    node.element.addEventListener('contextmenu', (e: MouseEvent) => {
+      if (!this.ctx.onNodeContextMenu) return;
+      e.preventDefault();
+      e.stopPropagation();
+      const info: NodeContextMenuInfo = {
+        id: node.id,
+        info: node.info,
+        clientX: e.clientX,
+        clientY: e.clientY,
+      };
+      this.ctx.onNodeContextMenu(info);
     });
   }
 
@@ -561,6 +604,7 @@ export class NodeManager {
     // 移除全局事件监听
     document.removeEventListener('keydown', this.handleKeyDown);
     this.ctx.container.removeEventListener('mousedown', this.handleContainerMouseDown);
+    this.ctx.container.removeEventListener('contextmenu', this.handleContainerContextMenu);
 
     // 移除所有连接点
     this.ctx.nodes.forEach((node) => {

@@ -28,6 +28,14 @@
         </div>
         <div
           class="nav-item"
+          :class="{ active: currentPath === '/toolBar' }"
+          @click="goToView('/toolBar')"
+        >
+          <span class="icon">🛠️</span>
+          <span class="label">toolbar</span>
+        </div>
+        <div
+          class="nav-item"
           :class="{ active: currentPath === '/connector' }"
           @click="goToView('/connector')"
         >
