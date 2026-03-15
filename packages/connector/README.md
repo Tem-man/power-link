@@ -157,6 +157,7 @@ Register a node for connection.
 - `id` (String): Unique identifier for the node
 - `element` (HTMLElement): DOM element of the node
 - `options` (Object): Node configuration
+  - `label` (String): Node name/label (optional)
   - `dotPositions` (String | Array): Connection dot positions
     - `'both'`: Both left and right dots
     - `'left'`: Only left dot (string format)
@@ -172,6 +173,7 @@ Register a node for connection.
 
 ```javascript
 connector.registerNode("myNode", element, {
+  label: "My Node",
   dotPositions: ["right"],
   info: {
     id: "123",
@@ -408,8 +410,8 @@ connector.updateAllConnections(); // Refresh all connection lines
 Export the current topology (nodes, connections, and view state) as a JSON object.
 
 **Returns:** ExportData object containing:
-- `nodes`: Array of node data (id, x, y, info, dotPositions)
-- `connections`: Array of connection data (from, to, fromDot, toDot)
+- `nodes`: Array of node data (id, label, x, y, info, dotPositions)
+- `connections`: Array of connection data (from, fromLabel, fromInfo, to, toLabel, toInfo, fromDot, toDot)
 - `viewState`: Current view state (scale, translateX, translateY)
 
 **Example:**
@@ -419,11 +421,20 @@ const data = connector.export();
 console.log(data);
 // {
 //   nodes: [
-//     { id: 'node1', x: 100, y: 100, info: {...}, dotPositions: ['right'] },
-//     { id: 'node2', x: 400, y: 100, info: {...}, dotPositions: ['left'] }
+//     { id: 'node1', label: 'Node 1', x: 100, y: 100, info: {...}, dotPositions: ['right'] },
+//     { id: 'node2', label: 'Node 2', x: 400, y: 100, info: {...}, dotPositions: ['left'] }
 //   ],
 //   connections: [
-//     { from: 'node1', to: 'node2', fromDot: 'right', toDot: 'left' }
+//     { 
+//       from: 'node1', 
+//       fromLabel: 'Node 1', 
+//       fromInfo: {...}, 
+//       to: 'node2', 
+//       toLabel: 'Node 2', 
+//       toInfo: {...}, 
+//       fromDot: 'right', 
+//       toDot: 'left' 
+//     }
 //   ],
 //   viewState: { scale: 1, translateX: 0, translateY: 0 }
 // }
@@ -1004,10 +1015,11 @@ let connector = null;
 
 const saveTopology = () => {
   const data = connector.export();
-  // Merge custom fields (label, type, etc.) if needed
+  // label is now included in export() by default
+  // Merge other custom fields (type, etc.) if needed
   data.nodes = data.nodes.map(exportNode => {
     const origin = nodes.value.find(n => n.id === exportNode.id);
-    return { ...exportNode, label: origin?.label, type: origin?.type };
+    return { ...exportNode, type: origin?.type };
   });
   localStorage.setItem('topology', JSON.stringify(data));
 };
@@ -1054,8 +1066,8 @@ const loadTopology = async () => {
 
 **What's Included in Export:**
 
-- **Nodes**: ID, position (x, y), custom info, dot positions
-- **Connections**: Source/target nodes, dot positions
+- **Nodes**: ID, label (node name), position (x, y), custom info, dot positions
+- **Connections**: from, fromLabel, fromInfo, to, toLabel, toInfo, fromDot, toDot
 - **View State**: Current zoom level and pan position (scale, translateX, translateY)
 
 **Benefits:**

@@ -153,6 +153,8 @@ export interface ExportNodeData {
 
 /** 导出的单条连接数据 */
 export interface ExportConnectionData {
+  /** 连接唯一标识，格式：fromId:fromDot-toId:toDot */
+  id: string;
   from: string;
   /** from 节点名称 */
   fromLabel?: string;
@@ -180,9 +182,7 @@ export interface ExportData {
  * 接收节点数据，返回对应的 HTMLElement（或 Promise）
  * 库会负责定位和挂载，工厂只需构建元素结构
  */
-export type NodeFactory = (
-  nodeData: ExportNodeData,
-) => HTMLElement | Promise<HTMLElement>;
+export type NodeFactory = (nodeData: ExportNodeData) => HTMLElement | Promise<HTMLElement>;
 
 // ==================== 吸附相关 ====================
 

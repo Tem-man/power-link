@@ -168,7 +168,7 @@ export class Connector {
   registerNode(
     id: string,
     element: HTMLElement,
-    options?: RegisterNodeOptions,
+    options?: RegisterNodeOptions
   ): ConnectorNode | undefined {
     return this.nodeManager.registerNode(id, element, options);
   }
@@ -230,7 +230,7 @@ export class Connector {
     toNodeId: string,
     fromDotPosition?: string,
     toDotPosition?: string,
-    options?: SilentOptions,
+    options?: SilentOptions
   ): Connection | undefined {
     const fromNode = this.ctx.nodes.find((n) => n.id === fromNodeId);
     const toNode = this.ctx.nodes.find((n) => n.id === toNodeId);
@@ -242,9 +242,7 @@ export class Connector {
     const fromDot = fromDotPosition
       ? fromNode.dots[fromDotPosition as 'left' | 'right'] || null
       : null;
-    const toDot = toDotPosition
-      ? toNode.dots[toDotPosition as 'left' | 'right'] || null
-      : null;
+    const toDot = toDotPosition ? toNode.dots[toDotPosition as 'left' | 'right'] || null : null;
 
     return this.connectionManager.createConnection(fromNode, toNode, fromDot, toDot, options);
   }
@@ -296,6 +294,7 @@ export class Connector {
         dotPositions: node.dotPositions,
       })),
       connections: this.ctx.connections.map((conn) => ({
+        id: conn.id,
         from: conn.fromNode.id,
         fromLabel: conn.fromNode.label,
         fromInfo: conn.fromNode.info,
@@ -356,9 +355,7 @@ export class Connector {
         this.ctx.contentWrapper.appendChild(element);
       } else {
         // 框架模式：按 id 属性查找已由框架渲染的元素
-        element = this.ctx.contentWrapper.querySelector<HTMLElement>(
-          `[id="${nodeData.id}"]`,
-        );
+        element = this.ctx.contentWrapper.querySelector<HTMLElement>(`[id="${nodeData.id}"]`);
         if (element) {
           // 用保存的坐标覆盖当前样式，确保位置精确还原
           element.style.left = `${nodeData.x}px`;
@@ -372,6 +369,7 @@ export class Connector {
       }
 
       this.nodeManager.registerNode(nodeData.id, element, {
+        label: nodeData.label,
         dotPositions: nodeData.dotPositions,
         info: nodeData.info,
       });

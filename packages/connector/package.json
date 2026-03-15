@@ -1,18 +1,19 @@
 {
   "name": "power-link",
-  "version": "2.0.1",
+  "version": "2.0.4",
   "description": "A pure TypeScript visual node connector for creating draggable connections between nodes. Framework-agnostic and easy to use",
   "author": {
     "name": "Lin Ji Man",
     "email": "Temman_lin@qq.com"
   },
   "keywords": [
-    "power-link",
     "connector",
     "node-link",
     "visual-connector",
     "drag-line",
-    "bezier-curve"
+    "bezier-curve",
+    "high-customization",
+    "flow-chart"
   ],
   "license": "MIT",
   "homepage": "https://tem-man.github.io/power-link",

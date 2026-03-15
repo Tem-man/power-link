@@ -39,11 +39,12 @@ export class ConnectionManager {
     toNode: ConnectorNode,
     fromDot: Dot | null = null,
     toDot: Dot | null = null,
-    options: SilentOptions = {},
+    options: SilentOptions = {}
   ): Connection | undefined {
     // 自动选择触点：如果没有指定，则智能选择
     if (!fromDot && fromNode.dots) {
-      fromDot = fromNode.dots.right || fromNode.dots.left || Object.values(fromNode.dots)[0] || null;
+      fromDot =
+        fromNode.dots.right || fromNode.dots.left || Object.values(fromNode.dots)[0] || null;
     }
     if (!toDot && toNode.dots) {
       toDot = toNode.dots.left || toNode.dots.right || Object.values(toNode.dots)[0] || null;
@@ -64,7 +65,7 @@ export class ConnectionManager {
         (conn.fromNode.id === toNode.id &&
           conn.toNode.id === fromNode.id &&
           conn.fromDot.position === toDot!.position &&
-          conn.toDot.position === fromDot!.position),
+          conn.toDot.position === fromDot!.position)
     );
 
     if (existingConnection) {
@@ -80,7 +81,7 @@ export class ConnectionManager {
     const deleteButton = this.createDeleteButton();
 
     const connection: Connection = {
-      id: `${fromNode.id}-${toNode.id}-${fromDot.position}-${toDot.position}-${Date.now()}`,
+      id: `${fromNode.id}:${fromDot.position}-${toNode.id}:${toDot.position}`,
       fromNode,
       toNode,
       fromDot,
@@ -124,11 +125,11 @@ export class ConnectionManager {
 
     const fromPos = this.positionHelper.getDotPosition(
       connection.fromNode.element,
-      connection.fromDot.position,
+      connection.fromDot.position
     );
     const toPos = this.positionHelper.getDotPosition(
       connection.toNode.element,
-      connection.toDot.position,
+      connection.toDot.position
     );
 
     this.updateLine(
@@ -136,7 +137,7 @@ export class ConnectionManager {
       fromPos,
       toPos,
       connection.fromDot.position,
-      connection.toDot.position,
+      connection.toDot.position
     );
 
     // 同步更新悬浮路径
@@ -146,7 +147,7 @@ export class ConnectionManager {
         fromPos,
         toPos,
         connection.fromDot.position,
-        connection.toDot.position,
+        connection.toDot.position
       );
     }
 
@@ -156,7 +157,7 @@ export class ConnectionManager {
         fromPos,
         toPos,
         connection.fromDot.position,
-        connection.toDot.position,
+        connection.toDot.position
       );
       const radius = this.ctx.config.deleteButtonSize / 2;
       // 使用 SVG transform 定位，保持原有 transform scale（如果有）
@@ -166,7 +167,7 @@ export class ConnectionManager {
       // 设置 translate 和 scale，scale 用于悬浮放大效果
       connection.deleteButton.setAttribute(
         'transform',
-        `translate(${midPoint.x - radius}, ${midPoint.y - radius}) scale(${scale})`,
+        `translate(${midPoint.x - radius}, ${midPoint.y - radius}) scale(${scale})`
       );
     }
   }
@@ -176,7 +177,7 @@ export class ConnectionManager {
    */
   updateNodeConnections(nodeId: string): void {
     const connections = this.ctx.connections.filter(
-      (conn) => conn.fromNode.id === nodeId || conn.toNode.id === nodeId,
+      (conn) => conn.fromNode.id === nodeId || conn.toNode.id === nodeId
     );
     connections.forEach((conn) => this.updateConnection(conn));
   }
@@ -225,10 +226,10 @@ export class ConnectionManager {
 
       // 从节点的连接列表中移除
       connection.fromNode.connections = connection.fromNode.connections.filter(
-        (c) => c.id !== connectionId,
+        (c) => c.id !== connectionId
       );
       connection.toNode.connections = connection.toNode.connections.filter(
-        (c) => c.id !== connectionId,
+        (c) => c.id !== connectionId
       );
 
       // 从连接列表中移除
@@ -301,7 +302,7 @@ export class ConnectionManager {
     start: Point,
     end: Point,
     startDotPosition: DotPosition = 'right',
-    endDotPosition: DotPosition = 'left',
+    endDotPosition: DotPosition = 'left'
   ): void {
     const dx = end.x - start.x;
     const dy = end.y - start.y;
@@ -312,18 +313,13 @@ export class ConnectionManager {
 
     // 根据触点位置决定控制点方向
     const startControlX =
-      startDotPosition === 'right'
-        ? start.x + controlPointOffset
-        : start.x - controlPointOffset;
+      startDotPosition === 'right' ? start.x + controlPointOffset : start.x - controlPointOffset;
 
     const endControlX =
-      endDotPosition === 'right'
-        ? end.x + controlPointOffset
-        : end.x - controlPointOffset;
+      endDotPosition === 'right' ? end.x + controlPointOffset : end.x - controlPointOffset;
 
     // 使用三次贝塞尔曲线
-    const path =
-      `M ${start.x} ${start.y} C ${startControlX} ${start.y}, ${endControlX} ${end.y}, ${end.x} ${end.y}`;
+    const path = `M ${start.x} ${start.y} C ${startControlX} ${start.y}, ${endControlX} ${end.y}, ${end.x} ${end.y}`;
     line.setAttribute('d', path);
   }
 
@@ -334,7 +330,7 @@ export class ConnectionManager {
     start: Point,
     end: Point,
     startDotPosition: DotPosition = 'right',
-    endDotPosition: DotPosition = 'left',
+    endDotPosition: DotPosition = 'left'
   ): Point {
     const dx = end.x - start.x;
     const dy = end.y - start.y;
@@ -343,15 +339,11 @@ export class ConnectionManager {
     const controlPointOffset = Math.min(distance * 0.5, 150);
 
     const cp1x =
-      startDotPosition === 'right'
-        ? start.x + controlPointOffset
-        : start.x - controlPointOffset;
+      startDotPosition === 'right' ? start.x + controlPointOffset : start.x - controlPointOffset;
     const cp1y = start.y;
 
     const cp2x =
-      endDotPosition === 'right'
-        ? end.x + controlPointOffset
-        : end.x - controlPointOffset;
+      endDotPosition === 'right' ? end.x + controlPointOffset : end.x - controlPointOffset;
     const cp2y = end.y;
 
     // 三次贝塞尔曲线在 t=0.5 处的点
@@ -402,7 +394,7 @@ export class ConnectionManager {
     // 两条线在圆心 (radius, radius) 处交叉，确保 × 符号完美居中
     xPath.setAttribute(
       'd',
-      `M ${radius - xLength} ${radius - xLength} L ${radius + xLength} ${radius + xLength} M ${radius + xLength} ${radius - xLength} L ${radius - xLength} ${radius + xLength}`,
+      `M ${radius - xLength} ${radius - xLength} L ${radius + xLength} ${radius + xLength} M ${radius + xLength} ${radius - xLength} L ${radius - xLength} ${radius + xLength}`
     );
     xPath.setAttribute('stroke', 'white');
     xPath.setAttribute('stroke-width', '1.8');
@@ -509,4 +501,3 @@ export class ConnectionManager {
     this.disconnect(undefined, { silent: options.silent ?? true });
   }
 }
-
