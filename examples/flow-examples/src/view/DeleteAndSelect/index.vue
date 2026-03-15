@@ -92,7 +92,7 @@
 
         <!-- Delete Log -->
         <div class="panel-section">
-          <div class="panel-title">onNodeDelete</div>
+          <div class="panel-title">on Node Delete</div>
           <div v-if="deleteLog[0]" class="node-card">
             <div class="node-card-row">
               <span class="field-key">id</span>

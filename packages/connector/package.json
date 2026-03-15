@@ -1,6 +1,6 @@
 {
   "name": "power-link",
-  "version": "2.0.4",
+  "version": "2.0.5",
   "description": "A pure TypeScript visual node connector for creating draggable connections between nodes. Framework-agnostic and easy to use",
   "author": {
     "name": "Lin Ji Man",
